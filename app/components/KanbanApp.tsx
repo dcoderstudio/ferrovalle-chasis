@@ -8,74 +8,88 @@ import ChassisModal from './ChassisModal';
 type ColumnConfig = {
   id: ChassisStatus;
   label: string;
-  bg: string;
   border: string;
+  borderOver: string;
+  headerBg: string;
   headerText: string;
+  badge: string;
   dot: string;
-  badgeCls: string;
-  cardAccent: string;
+  bar: string;
+  emptyBorder: string;
 };
 
 const COLUMNS: ColumnConfig[] = [
   {
     id: 'recibido',
     label: 'Recibido',
-    bg: 'bg-amber-50',
-    border: 'border-amber-200',
-    headerText: 'text-amber-700',
-    dot: 'bg-amber-500',
-    badgeCls: 'bg-amber-100 text-amber-700',
-    cardAccent: 'bg-amber-500',
+    border: 'border-cyan-400/20',
+    borderOver: 'border-cyan-400/60',
+    headerBg: 'bg-cyan-400/10',
+    headerText: 'text-cyan-300',
+    badge: 'bg-cyan-400/20 text-cyan-300',
+    dot: 'bg-cyan-400',
+    bar: 'bg-gradient-to-r from-cyan-400 to-cyan-300',
+    emptyBorder: 'border-cyan-400/20',
   },
   {
     id: 'diagnostico',
     label: 'Diagnóstico',
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    headerText: 'text-blue-700',
-    dot: 'bg-blue-500',
-    badgeCls: 'bg-blue-100 text-blue-700',
-    cardAccent: 'bg-blue-500',
+    border: 'border-blue-400/20',
+    borderOver: 'border-blue-400/60',
+    headerBg: 'bg-blue-400/10',
+    headerText: 'text-blue-300',
+    badge: 'bg-blue-400/20 text-blue-300',
+    dot: 'bg-blue-400',
+    bar: 'bg-gradient-to-r from-blue-400 to-indigo-300',
+    emptyBorder: 'border-blue-400/20',
   },
   {
     id: 'en-reparacion',
     label: 'En Reparación',
-    bg: 'bg-orange-50',
-    border: 'border-orange-200',
-    headerText: 'text-orange-700',
-    dot: 'bg-orange-500',
-    badgeCls: 'bg-orange-100 text-orange-700',
-    cardAccent: 'bg-orange-500',
+    border: 'border-orange-400/20',
+    borderOver: 'border-orange-400/60',
+    headerBg: 'bg-orange-400/10',
+    headerText: 'text-orange-300',
+    badge: 'bg-orange-400/20 text-orange-300',
+    dot: 'bg-orange-400',
+    bar: 'bg-gradient-to-r from-orange-400 to-amber-300',
+    emptyBorder: 'border-orange-400/20',
   },
   {
     id: 'acabados',
     label: 'Acabados',
-    bg: 'bg-violet-50',
-    border: 'border-violet-200',
-    headerText: 'text-violet-700',
-    dot: 'bg-violet-500',
-    badgeCls: 'bg-violet-100 text-violet-700',
-    cardAccent: 'bg-violet-500',
+    border: 'border-purple-400/20',
+    borderOver: 'border-purple-400/60',
+    headerBg: 'bg-purple-400/10',
+    headerText: 'text-purple-300',
+    badge: 'bg-purple-400/20 text-purple-300',
+    dot: 'bg-purple-400',
+    bar: 'bg-gradient-to-r from-purple-400 to-violet-300',
+    emptyBorder: 'border-purple-400/20',
   },
   {
     id: 'inspeccion',
     label: 'Insp. Final',
-    bg: 'bg-cyan-50',
-    border: 'border-cyan-200',
-    headerText: 'text-cyan-700',
-    dot: 'bg-cyan-500',
-    badgeCls: 'bg-cyan-100 text-cyan-700',
-    cardAccent: 'bg-cyan-500',
+    border: 'border-pink-400/20',
+    borderOver: 'border-pink-400/60',
+    headerBg: 'bg-pink-400/10',
+    headerText: 'text-pink-300',
+    badge: 'bg-pink-400/20 text-pink-300',
+    dot: 'bg-pink-400',
+    bar: 'bg-gradient-to-r from-pink-400 to-rose-300',
+    emptyBorder: 'border-pink-400/20',
   },
   {
     id: 'entregado',
     label: 'Entregado',
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    headerText: 'text-green-700',
-    dot: 'bg-green-500',
-    badgeCls: 'bg-green-100 text-green-700',
-    cardAccent: 'bg-green-500',
+    border: 'border-emerald-400/20',
+    borderOver: 'border-emerald-400/60',
+    headerBg: 'bg-emerald-400/10',
+    headerText: 'text-emerald-300',
+    badge: 'bg-emerald-400/20 text-emerald-300',
+    dot: 'bg-emerald-400',
+    bar: 'bg-gradient-to-r from-emerald-400 to-green-300',
+    emptyBorder: 'border-emerald-400/20',
   },
 ];
 
@@ -142,54 +156,60 @@ export default function KanbanApp() {
   const delivered = chassisList.filter(c => c.status === 'entregado').length;
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-100">
+    <div className="flex flex-col h-screen overflow-hidden bg-[#080c14]">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-3 bg-[#0f2746] shadow-lg shrink-0 z-10">
+      <header
+        className="flex items-center justify-between px-6 py-4 shrink-0 z-10 border-b border-white/[0.06]"
+        style={{
+          background: 'linear-gradient(135deg, #1e0a3c 0%, #0c1e4a 60%, #080c14 100%)',
+          boxShadow: '0 1px 30px rgba(139,92,246,0.12)',
+        }}
+      >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center shrink-0">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: 'linear-gradient(135deg, #f97316, #c2410c)' }}
+          >
             <span className="text-white font-bold text-sm select-none">FV</span>
           </div>
           <div>
-            <h1 className="text-white font-bold text-base leading-tight">Ferrovalle</h1>
-            <p className="text-blue-300 text-xs">Gestión de Chasis de Grúas</p>
+            <h1 className="text-white font-bold text-base leading-tight tracking-tight">
+              Ferrovalle
+            </h1>
+            <p className="text-purple-300/60 text-xs">Gestión de Chasis de Grúas</p>
           </div>
         </div>
+
         <div className="flex items-center gap-5">
           <div className="hidden sm:flex items-center gap-5 text-xs">
-            <span className="text-slate-400">
-              <strong className="text-white text-sm">{chassisList.length}</strong> total
-            </span>
-            <span className="text-slate-400">
-              <strong className="text-orange-400 text-sm">{active}</strong> activos
-            </span>
-            <span className="text-slate-400">
-              <strong className="text-green-400 text-sm">{delivered}</strong> entregados
-            </span>
+            <Stat dot="bg-slate-500" label="total" value={chassisList.length} valueColor="text-white" />
+            <Stat dot="bg-orange-400" label="activos" value={active} valueColor="text-orange-300" />
+            <Stat dot="bg-emerald-400" label="entregados" value={delivered} valueColor="text-emerald-300" />
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            className="flex items-center gap-1.5 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #f97316, #c2410c)' }}
           >
-            <span className="text-base leading-none">+</span>
+            <span className="text-base leading-none font-light">+</span>
             <span>Agregar Chasis</span>
           </button>
         </div>
       </header>
 
       {/* Board */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-4">
-        <div className="flex gap-3 h-full" style={{ minWidth: 'max-content' }}>
+      <div className="flex-1 overflow-x-auto overflow-y-hidden p-5">
+        <div className="flex gap-4 h-full" style={{ minWidth: 'max-content' }}>
           {COLUMNS.map(col => {
             const items = chassisList.filter(c => c.status === col.id);
             const isOver = dragOverCol === col.id;
             return (
               <div
                 key={col.id}
-                className={`flex flex-col w-72 rounded-xl border-2 transition-colors ${
-                  isOver
-                    ? 'border-orange-400 bg-orange-50'
-                    : `${col.border} ${col.bg}`
+                className={`flex flex-col w-72 rounded-2xl border-2 transition-all duration-150 ${
+                  isOver ? col.borderOver : col.border
                 }`}
+                style={{ background: '#0e1420' }}
                 onDragOver={e => {
                   e.preventDefault();
                   setDragOverCol(col.id);
@@ -203,13 +223,13 @@ export default function KanbanApp() {
               >
                 {/* Column header */}
                 <div
-                  className={`flex items-center justify-between px-4 py-3 border-b-2 ${col.border} rounded-t-xl bg-white/60 shrink-0`}
+                  className={`flex items-center justify-between px-4 py-3 rounded-t-2xl border-b-2 ${col.border} ${col.headerBg} shrink-0`}
                 >
                   <div className="flex items-center gap-2">
-                    <div className={`w-2.5 h-2.5 rounded-full ${col.dot}`} />
+                    <div className={`w-2 h-2 rounded-full ${col.dot}`} />
                     <span className={`font-bold text-sm ${col.headerText}`}>{col.label}</span>
                   </div>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${col.badgeCls}`}>
+                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${col.badge}`}>
                     {items.length}
                   </span>
                 </div>
@@ -221,7 +241,7 @@ export default function KanbanApp() {
                       key={chassis.id}
                       chassis={chassis}
                       isDragging={draggedId === chassis.id}
-                      accent={col.cardAccent}
+                      bar={col.bar}
                       onDragStart={() => setDraggedId(chassis.id)}
                       onDragEnd={() => {
                         setDraggedId(null);
@@ -232,9 +252,9 @@ export default function KanbanApp() {
                   ))}
                   {items.length === 0 && (
                     <div
-                      className={`flex-1 flex items-center justify-center py-10 rounded-lg border-2 border-dashed ${col.border} mt-1`}
+                      className={`flex-1 flex items-center justify-center py-10 rounded-xl border-2 border-dashed ${col.emptyBorder} mt-1`}
                     >
-                      <p className={`text-xs ${col.headerText} opacity-40`}>Sin chasis</p>
+                      <p className={`text-xs ${col.headerText} opacity-30`}>Sin chasis</p>
                     </div>
                   )}
                 </div>
@@ -260,19 +280,42 @@ export default function KanbanApp() {
   );
 }
 
+// ─── Stat chip ────────────────────────────────────────────────────────────────
+
+function Stat({
+  dot,
+  label,
+  value,
+  valueColor,
+}: {
+  dot: string;
+  label: string;
+  value: number;
+  valueColor: string;
+}) {
+  return (
+    <span className="flex items-center gap-1.5">
+      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+      <span className="text-slate-500">
+        <strong className={`${valueColor} font-bold`}>{value}</strong> {label}
+      </span>
+    </span>
+  );
+}
+
 // ─── Chassis Card ─────────────────────────────────────────────────────────────
 
 function ChassisCard({
   chassis,
   isDragging,
-  accent,
+  bar,
   onDragStart,
   onDragEnd,
   onClick,
 }: {
   chassis: Chassis;
   isDragging: boolean;
-  accent: string;
+  bar: string;
   onDragStart: () => void;
   onDragEnd: () => void;
   onClick: () => void;
@@ -298,16 +341,19 @@ function ChassisCard({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onClick={onClick}
-      className={`bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer select-none overflow-hidden ${
-        isDragging ? 'opacity-40' : ''
+      className={`rounded-xl border border-white/[0.07] overflow-hidden cursor-pointer select-none transition-all ${
+        isDragging
+          ? 'opacity-40 scale-95'
+          : 'hover:border-white/[0.15] hover:bg-[#1a2235]'
       }`}
+      style={{ background: '#141b2d' }}
     >
-      <div className={`h-1 ${accent}`} />
+      <div className={`h-[3px] ${bar}`} />
       <div className="p-3.5">
-        {/* Number + client */}
+        {/* Number + PO */}
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="min-w-0">
-            <p className="font-bold text-slate-800 text-sm leading-tight">
+            <p className="font-bold text-white text-sm leading-tight">
               #{chassis.chassisNumber || '—'}
             </p>
             {chassis.clientName && (
@@ -315,17 +361,17 @@ function ChassisCard({
             )}
           </div>
           {chassis.purchaseOrder && (
-            <span className="text-xs bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-mono shrink-0 max-w-[80px] truncate">
+            <span className="text-xs bg-white/[0.06] text-slate-500 px-1.5 py-0.5 rounded-md font-mono shrink-0 max-w-[80px] truncate">
               {chassis.purchaseOrder}
             </span>
           )}
         </div>
 
-        {/* Commitment date */}
+        {/* Date */}
         {chassis.commitmentDate && (
           <div
             className={`flex items-center gap-1 text-xs mb-2 ${
-              isOverdue ? 'text-red-500 font-medium' : 'text-slate-500'
+              isOverdue ? 'text-red-400 font-medium' : 'text-slate-600'
             }`}
           >
             <span>{isOverdue ? '⚠️' : '📅'}</span>
@@ -337,12 +383,12 @@ function ChassisCard({
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-          <span className="text-xs text-slate-400">
+        <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.05]">
+          <span className="text-xs text-slate-700">
             {SIZE_LABELS[chassis.size]?.split(' ')[0] ?? chassis.size}
           </span>
           {totalServices > 0 && (
-            <span className="text-xs bg-orange-50 text-orange-600 font-medium px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-orange-500/15 text-orange-400 font-medium px-2 py-0.5 rounded-full">
               {totalServices} servicio{totalServices !== 1 ? 's' : ''}
             </span>
           )}
@@ -355,7 +401,7 @@ function ChassisCard({
 // ─── Add Chassis Modal ────────────────────────────────────────────────────────
 
 const inp =
-  'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-colors bg-white';
+  'w-full bg-[#1a2235] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all [color-scheme:dark]';
 
 function AddChassisModal({
   onAdd,
@@ -394,23 +440,28 @@ function AddChassisModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg"
+        className="rounded-2xl shadow-2xl w-full max-w-lg border border-white/[0.08] overflow-hidden"
+        style={{ background: '#0e1420' }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="px-6 py-4 bg-[#0f2746] rounded-t-2xl">
-          <h2 className="text-white font-bold text-lg">Registrar nuevo chasis</h2>
-          <p className="text-blue-300 text-xs mt-0.5">Ingresa la información básica del chasis</p>
+        <div
+          className="px-6 py-5 border-b border-white/[0.06]"
+          style={{ background: 'linear-gradient(135deg, #1e0a3c 0%, #0c1e4a 100%)' }}
+        >
+          <h2 className="text-white font-bold text-lg tracking-tight">Registrar nuevo chasis</h2>
+          <p className="text-purple-300/50 text-xs mt-0.5">
+            Ingresa la información básica del chasis
+          </p>
         </div>
+
         <form onSubmit={handleSubmit} className="p-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
-                Número de Chasis <span className="text-red-400">*</span>
-              </label>
+              <Label text="Número de Chasis" required />
               <input
                 className={inp}
                 value={form.chassisNumber}
@@ -421,9 +472,7 @@ function AddChassisModal({
               />
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
-                Cliente
-              </label>
+              <Label text="Cliente" />
               <input
                 className={inp}
                 value={form.clientName}
@@ -432,9 +481,7 @@ function AddChassisModal({
               />
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
-                Orden de Compra
-              </label>
+              <Label text="Orden de Compra" />
               <input
                 className={inp}
                 value={form.purchaseOrder}
@@ -443,9 +490,7 @@ function AddChassisModal({
               />
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
-                Fecha de Entrega
-              </label>
+              <Label text="Fecha de Entrega" />
               <input
                 type="date"
                 className={inp}
@@ -454,9 +499,7 @@ function AddChassisModal({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
-                Tamaño
-              </label>
+              <Label text="Tamaño" />
               <select
                 className={inp}
                 value={form.size}
@@ -470,9 +513,7 @@ function AddChassisModal({
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
-                Condición
-              </label>
+              <Label text="Condición" />
               <select
                 className={inp}
                 value={form.condition}
@@ -486,9 +527,7 @@ function AddChassisModal({
               </select>
             </div>
             <div className="col-span-2">
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
-                Notas
-              </label>
+              <Label text="Notas" />
               <textarea
                 className={`${inp} resize-none`}
                 rows={2}
@@ -498,17 +537,19 @@ function AddChassisModal({
               />
             </div>
           </div>
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
+
+          <div className="flex justify-end gap-3 mt-6 pt-5 border-t border-white/[0.06]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 font-medium"
+              className="px-4 py-2 text-sm text-slate-500 hover:text-white font-medium transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-semibold rounded-lg transition-colors"
+              className="px-6 py-2.5 text-white text-sm font-semibold rounded-xl transition-all hover:opacity-90 active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #f97316, #c2410c)' }}
             >
               Registrar Chasis
             </button>
@@ -516,5 +557,13 @@ function AddChassisModal({
         </form>
       </div>
     </div>
+  );
+}
+
+function Label({ text, required }: { text: string; required?: boolean }) {
+  return (
+    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+      {text} {required && <span className="text-red-400 normal-case">*</span>}
+    </label>
   );
 }

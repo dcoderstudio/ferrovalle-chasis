@@ -12,17 +12,52 @@ import {
 
 type Tab = 'info' | 'fotos' | 'cotizacion';
 
-const STATUS_OPTIONS: Array<{ id: ChassisStatus; label: string; cls: string; activeCls: string }> = [
-  { id: 'recibido', label: 'Recibido', cls: 'border-amber-300 text-amber-700 hover:bg-amber-50', activeCls: 'bg-amber-100 border-amber-400 text-amber-800 font-bold' },
-  { id: 'diagnostico', label: 'Diagnóstico', cls: 'border-blue-300 text-blue-700 hover:bg-blue-50', activeCls: 'bg-blue-100 border-blue-400 text-blue-800 font-bold' },
-  { id: 'en-reparacion', label: 'En Reparación', cls: 'border-orange-300 text-orange-700 hover:bg-orange-50', activeCls: 'bg-orange-100 border-orange-400 text-orange-800 font-bold' },
-  { id: 'acabados', label: 'Acabados', cls: 'border-violet-300 text-violet-700 hover:bg-violet-50', activeCls: 'bg-violet-100 border-violet-400 text-violet-800 font-bold' },
-  { id: 'inspeccion', label: 'Insp. Final', cls: 'border-cyan-300 text-cyan-700 hover:bg-cyan-50', activeCls: 'bg-cyan-100 border-cyan-400 text-cyan-800 font-bold' },
-  { id: 'entregado', label: 'Entregado', cls: 'border-green-300 text-green-700 hover:bg-green-50', activeCls: 'bg-green-100 border-green-400 text-green-800 font-bold' },
+const STATUS_OPTIONS: Array<{
+  id: ChassisStatus;
+  label: string;
+  inactive: string;
+  active: string;
+}> = [
+  {
+    id: 'recibido',
+    label: 'Recibido',
+    inactive: 'border-white/[0.08] text-slate-500 hover:border-cyan-400/30 hover:text-cyan-400',
+    active: 'bg-cyan-400/15 border-cyan-400/50 text-cyan-300 font-semibold',
+  },
+  {
+    id: 'diagnostico',
+    label: 'Diagnóstico',
+    inactive: 'border-white/[0.08] text-slate-500 hover:border-blue-400/30 hover:text-blue-400',
+    active: 'bg-blue-400/15 border-blue-400/50 text-blue-300 font-semibold',
+  },
+  {
+    id: 'en-reparacion',
+    label: 'En Reparación',
+    inactive: 'border-white/[0.08] text-slate-500 hover:border-orange-400/30 hover:text-orange-400',
+    active: 'bg-orange-400/15 border-orange-400/50 text-orange-300 font-semibold',
+  },
+  {
+    id: 'acabados',
+    label: 'Acabados',
+    inactive: 'border-white/[0.08] text-slate-500 hover:border-purple-400/30 hover:text-purple-400',
+    active: 'bg-purple-400/15 border-purple-400/50 text-purple-300 font-semibold',
+  },
+  {
+    id: 'inspeccion',
+    label: 'Insp. Final',
+    inactive: 'border-white/[0.08] text-slate-500 hover:border-pink-400/30 hover:text-pink-400',
+    active: 'bg-pink-400/15 border-pink-400/50 text-pink-300 font-semibold',
+  },
+  {
+    id: 'entregado',
+    label: 'Entregado',
+    inactive: 'border-white/[0.08] text-slate-500 hover:border-emerald-400/30 hover:text-emerald-400',
+    active: 'bg-emerald-400/15 border-emerald-400/50 text-emerald-300 font-semibold',
+  },
 ];
 
 const inp =
-  'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-colors bg-white';
+  'w-full bg-[#1a2235] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all [color-scheme:dark]';
 
 function formatCurrency(n: number): string {
   return new Intl.NumberFormat('es-MX', {
@@ -116,21 +151,25 @@ export default function ChassisModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col"
+        className="rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col border border-white/[0.08] overflow-hidden"
+        style={{ background: '#0e1420' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 bg-[#0f2746] rounded-t-2xl shrink-0">
+        <div
+          className="px-6 py-5 shrink-0 border-b border-white/[0.06]"
+          style={{ background: 'linear-gradient(135deg, #1e0a3c 0%, #0c1e4a 100%)' }}
+        >
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-white font-bold text-xl leading-tight">
+              <h2 className="text-white font-bold text-xl tracking-tight">
                 Chasis #{data.chassisNumber || '—'}
               </h2>
-              <p className="text-blue-300 text-sm mt-0.5">
+              <p className="text-purple-300/60 text-sm mt-0.5">
                 {data.clientName || 'Sin cliente asignado'}
                 {data.purchaseOrder ? ` · OC: ${data.purchaseOrder}` : ''}
               </p>
@@ -139,14 +178,15 @@ export default function ChassisModal({
               {hasChanges && (
                 <button
                   onClick={handleSave}
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-1.5 rounded-lg text-sm font-semibold"
+                  className="text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
+                  style={{ background: 'linear-gradient(135deg, #f97316, #c2410c)' }}
                 >
                   Guardar
                 </button>
               )}
               <button
                 onClick={onClose}
-                className="text-slate-400 hover:text-white transition-colors text-2xl leading-none w-8 h-8 flex items-center justify-center"
+                className="text-white/30 hover:text-white transition-colors text-2xl leading-none w-8 h-8 flex items-center justify-center"
               >
                 ×
               </button>
@@ -155,13 +195,13 @@ export default function ChassisModal({
         </div>
 
         {/* Status selector */}
-        <div className="flex gap-2 px-6 py-3 bg-slate-50 border-b border-slate-200 overflow-x-auto shrink-0">
+        <div className="flex gap-2 px-6 py-3 border-b border-white/[0.06] overflow-x-auto shrink-0 bg-[#0a0f1a]">
           {STATUS_OPTIONS.map(opt => (
             <button
               key={opt.id}
               onClick={() => update({ status: opt.id })}
               className={`px-3 py-1 rounded-full text-xs border whitespace-nowrap transition-all ${
-                data.status === opt.id ? opt.activeCls : `bg-white ${opt.cls}`
+                data.status === opt.id ? opt.active : `bg-transparent ${opt.inactive}`
               }`}
             >
               {opt.label}
@@ -170,20 +210,20 @@ export default function ChassisModal({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-200 px-6 shrink-0">
+        <div className="flex border-b border-white/[0.06] px-6 shrink-0 bg-[#0a0f1a]">
           {TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
+                  ? 'border-violet-400 text-violet-300'
+                  : 'border-transparent text-slate-600 hover:text-slate-300'
               }`}
             >
               {tab.label}
               {tab.id === 'cotizacion' && quotedTotal > 0 && (
-                <span className="ml-2 text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full">
+                <span className="ml-2 text-xs bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded-full">
                   {formatCurrency(quotedTotal)}
                 </span>
               )}
@@ -195,11 +235,7 @@ export default function ChassisModal({
         <div className="flex-1 overflow-y-auto p-6">
           {activeTab === 'info' && <InfoTab data={data} update={update} />}
           {activeTab === 'fotos' && (
-            <FotosTab
-              data={data}
-              onPhotoUpload={handlePhotoUpload}
-              onRemovePhoto={removePhoto}
-            />
+            <FotosTab data={data} onPhotoUpload={handlePhotoUpload} onRemovePhoto={removePhoto} />
           )}
           {activeTab === 'cotizacion' && (
             <CotizacionTab
@@ -214,23 +250,24 @@ export default function ChassisModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-white/[0.06] shrink-0 bg-[#0a0f1a]">
           <button
             onClick={() => onDelete(chassis.id)}
-            className="text-red-500 hover:text-red-700 text-sm font-medium transition-colors"
+            className="text-red-500/70 hover:text-red-400 text-sm font-medium transition-colors"
           >
             Eliminar chasis
           </button>
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 font-medium"
+              className="px-4 py-2 text-sm text-slate-500 hover:text-white font-medium transition-colors"
             >
               Cerrar
             </button>
             <button
               onClick={handleSave}
-              className="px-6 py-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-semibold rounded-lg transition-colors"
+              className="px-6 py-2.5 text-white text-sm font-semibold rounded-xl transition-all hover:opacity-90 active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #f97316, #c2410c)' }}
             >
               Guardar cambios
             </button>
@@ -356,28 +393,28 @@ function FotosTab({
     label: string;
     hint: string;
     emptyBorder: string;
-    emptyBg: string;
+    emptyText: string;
   }> = [
     {
       key: 'photosBefore',
       label: 'Fotos Antes',
       hint: 'Estado inicial del chasis al recibirlo',
-      emptyBorder: 'border-blue-300',
-      emptyBg: 'bg-blue-50',
+      emptyBorder: 'border-cyan-400/30',
+      emptyText: 'text-cyan-400',
     },
     {
       key: 'photosDetail',
       label: 'Fotos de Detalles',
       hint: 'Áreas específicas de daño o trabajo requerido',
-      emptyBorder: 'border-amber-300',
-      emptyBg: 'bg-amber-50',
+      emptyBorder: 'border-amber-400/30',
+      emptyText: 'text-amber-400',
     },
     {
       key: 'photosAfter',
       label: 'Fotos Después',
       hint: 'Estado final tras completar la reparación',
-      emptyBorder: 'border-green-300',
-      emptyBg: 'bg-green-50',
+      emptyBorder: 'border-emerald-400/30',
+      emptyText: 'text-emerald-400',
     },
   ];
 
@@ -387,11 +424,11 @@ function FotosTab({
         <div key={sec.key}>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="font-semibold text-slate-700">{sec.label}</h3>
-              <p className="text-xs text-slate-500 mt-0.5">{sec.hint}</p>
+              <h3 className="font-semibold text-white text-sm">{sec.label}</h3>
+              <p className="text-xs text-slate-600 mt-0.5">{sec.hint}</p>
             </div>
             {data[sec.key].length > 0 && (
-              <label className="cursor-pointer flex items-center gap-1.5 text-sm bg-white border border-slate-300 hover:border-slate-400 text-slate-600 hover:text-slate-800 px-3 py-1.5 rounded-lg transition-colors">
+              <label className="cursor-pointer flex items-center gap-1.5 text-xs bg-white/[0.05] border border-white/[0.08] hover:border-white/20 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg transition-all">
                 <span>+</span> Agregar fotos
                 <input
                   type="file"
@@ -409,16 +446,17 @@ function FotosTab({
               {data[sec.key].map((src, i) => (
                 <div
                   key={i}
-                  className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm"
+                  className="relative group aspect-square rounded-xl overflow-hidden border border-white/[0.08]"
                 >
                   <img
                     src={src}
                     alt={`${sec.label} ${i + 1}`}
                     className="w-full h-full object-cover"
                   />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors" />
                   <button
                     onClick={() => onRemovePhoto(sec.key, i)}
-                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs hidden group-hover:flex items-center justify-center"
+                    className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-500 text-white rounded-full text-xs hidden group-hover:flex items-center justify-center"
                   >
                     ×
                   </button>
@@ -427,11 +465,12 @@ function FotosTab({
             </div>
           ) : (
             <label
-              className={`flex flex-col items-center justify-center border-2 border-dashed ${sec.emptyBorder} ${sec.emptyBg} rounded-xl py-10 cursor-pointer hover:opacity-75 transition-opacity`}
+              className={`flex flex-col items-center justify-center border-2 border-dashed ${sec.emptyBorder} rounded-xl py-10 cursor-pointer hover:opacity-75 transition-opacity`}
+              style={{ background: 'rgba(255,255,255,0.02)' }}
             >
-              <span className="text-4xl mb-2">📷</span>
-              <p className="text-sm text-slate-500">Click para subir fotos</p>
-              <p className="text-xs text-slate-400 mt-0.5">PNG, JPG — máx 6 fotos</p>
+              <span className="text-3xl mb-2 opacity-40">📷</span>
+              <p className={`text-sm ${sec.emptyText} opacity-60`}>Click para subir fotos</p>
+              <p className="text-xs text-slate-700 mt-0.5">PNG, JPG — máx 6 fotos</p>
               <input
                 type="file"
                 accept="image/*"
@@ -466,36 +505,44 @@ function CotizacionTab({
 }) {
   const sizeMultiplier = SIZE_MULTIPLIERS[data.size] ?? 1;
   const conditionMultiplier = CONDITION_MULTIPLIERS[data.condition] ?? 1;
-  const combinedMultiplier = Math.round(sizeMultiplier * conditionMultiplier * 100) / 100;
+  const combined = Math.round(sizeMultiplier * conditionMultiplier * 100) / 100;
 
   return (
     <div className="space-y-6">
-      {/* Multipliers panel */}
-      <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
-        <h3 className="font-semibold text-slate-700 text-sm mb-3">Factores de ajuste de precio</h3>
+      {/* Multiplier cards */}
+      <div
+        className="rounded-xl border border-white/[0.06] p-4"
+        style={{ background: '#141b2d' }}
+      >
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+          Factores de ajuste de precio
+        </p>
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-lg p-3 border border-slate-200 text-center">
-            <p className="text-xs text-slate-500 mb-1">Tamaño</p>
-            <p className="font-semibold text-slate-800 text-sm">{SIZE_LABELS[data.size]?.split(' ')[0]}</p>
-            <p className="text-sm text-orange-600 font-mono mt-1">×{sizeMultiplier}</p>
-          </div>
-          <div className="bg-white rounded-lg p-3 border border-slate-200 text-center">
-            <p className="text-xs text-slate-500 mb-1">Condición</p>
-            <p className="font-semibold text-slate-800 text-sm">
-              {CONDITION_LABELS[data.condition]?.split(' ')[0]}
-            </p>
-            <p className="text-sm text-orange-600 font-mono mt-1">×{conditionMultiplier}</p>
-          </div>
-          <div className="bg-orange-50 rounded-lg p-3 border border-orange-200 text-center">
-            <p className="text-xs text-orange-600 mb-1">Factor combinado</p>
-            <p className="font-bold text-orange-700 text-xl mt-1">×{combinedMultiplier}</p>
+          <MultiplierCard
+            label="Tamaño"
+            value={SIZE_LABELS[data.size]?.split(' ')[0] ?? data.size}
+            multiplier={`×${sizeMultiplier}`}
+          />
+          <MultiplierCard
+            label="Condición"
+            value={CONDITION_LABELS[data.condition]?.split(' ')[0] ?? data.condition}
+            multiplier={`×${conditionMultiplier}`}
+          />
+          <div
+            className="rounded-xl p-3 border border-orange-400/20 text-center"
+            style={{ background: 'rgba(249,115,22,0.08)' }}
+          >
+            <p className="text-xs text-orange-400/70 mb-1">Factor total</p>
+            <p className="font-bold text-orange-300 text-2xl">×{combined}</p>
           </div>
         </div>
       </div>
 
-      {/* Services list */}
+      {/* Services */}
       <div>
-        <h3 className="font-semibold text-slate-700 text-sm mb-3">Servicios</h3>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+          Servicios
+        </p>
         <div className="space-y-2">
           {SERVICES.map(svc => {
             const sel = data.selectedServices.find(s => s.serviceId === svc.id);
@@ -506,9 +553,10 @@ function CotizacionTab({
                 key={svc.id}
                 className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
                   sel
-                    ? 'border-orange-300 bg-orange-50'
-                    : 'border-slate-200 bg-white hover:border-slate-300'
+                    ? 'border-orange-400/25 bg-orange-400/[0.06]'
+                    : 'border-white/[0.06] hover:border-white/[0.10]'
                 }`}
+                style={!sel ? { background: '#141b2d' } : undefined}
               >
                 <input
                   type="checkbox"
@@ -517,34 +565,38 @@ function CotizacionTab({
                   className="w-4 h-4 accent-orange-500 shrink-0 cursor-pointer"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${sel ? 'text-orange-800' : 'text-slate-700'}`}>
+                  <p
+                    className={`text-sm font-medium ${sel ? 'text-orange-200' : 'text-slate-300'}`}
+                  >
                     {svc.name}
                   </p>
-                  <p className="text-xs text-slate-500 truncate">{svc.description}</p>
+                  <p className="text-xs text-slate-600 truncate">{svc.description}</p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="text-right">
-                    <p className="text-xs text-slate-500 whitespace-nowrap">
+                    <p className="text-xs text-slate-600 whitespace-nowrap">
                       {formatCurrency(unitPrice)}/{svc.unit}
                     </p>
                     {sel && (
-                      <p className="text-sm font-bold text-orange-600">{formatCurrency(subtotal)}</p>
+                      <p className="text-sm font-bold text-orange-400">
+                        {formatCurrency(subtotal)}
+                      </p>
                     )}
                   </div>
                   {sel && (
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => updateQty(svc.id, sel.quantity - 1)}
-                        className="w-7 h-7 bg-white border border-slate-300 rounded-lg text-sm hover:bg-slate-50 font-bold leading-none"
+                        className="w-7 h-7 bg-white/[0.05] border border-white/[0.08] hover:bg-white/10 rounded-lg text-sm text-white font-bold leading-none"
                       >
                         −
                       </button>
-                      <span className="w-8 text-center text-sm font-mono font-bold">
+                      <span className="w-8 text-center text-sm font-mono font-bold text-white">
                         {sel.quantity}
                       </span>
                       <button
                         onClick={() => updateQty(svc.id, sel.quantity + 1)}
-                        className="w-7 h-7 bg-white border border-slate-300 rounded-lg text-sm hover:bg-slate-50 font-bold leading-none"
+                        className="w-7 h-7 bg-white/[0.05] border border-white/[0.08] hover:bg-white/10 rounded-lg text-sm text-white font-bold leading-none"
                       >
                         +
                       </button>
@@ -557,32 +609,34 @@ function CotizacionTab({
         </div>
       </div>
 
-      {/* Total summary */}
+      {/* Total */}
       {quotedTotal > 0 && (
-        <div className="bg-white border-2 border-orange-200 rounded-xl p-4 shadow-sm">
+        <div
+          className="rounded-xl border-2 border-orange-400/20 p-5"
+          style={{ background: 'rgba(249,115,22,0.06)' }}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600 font-medium">Total cotizado</p>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-sm font-semibold text-white">Total cotizado</p>
+              <p className="text-xs text-slate-500 mt-0.5">
                 {data.selectedServices.length} servicio
-                {data.selectedServices.length !== 1 ? 's' : ''} seleccionado
                 {data.selectedServices.length !== 1 ? 's' : ''}
               </p>
             </div>
-            <p className="text-2xl font-bold text-orange-600">{formatCurrency(quotedTotal)}</p>
+            <p className="text-3xl font-bold text-orange-400">{formatCurrency(quotedTotal)}</p>
           </div>
-          <div className="mt-4 pt-4 border-t border-slate-100">
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+          <div className="mt-4 pt-4 border-t border-white/[0.06]">
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
               Precio final acordado (sobreescribe la cotización)
             </label>
             <input
               type="number"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-white"
+              className="w-full bg-[#1a2235] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/40 transition-all [color-scheme:dark]"
               value={data.finalPrice ?? ''}
               onChange={e =>
                 update({ finalPrice: e.target.value ? Number(e.target.value) : null })
               }
-              placeholder={`Cotización calculada: ${formatCurrency(quotedTotal)}`}
+              placeholder={`Cotización: ${formatCurrency(quotedTotal)}`}
               min={0}
             />
           </div>
@@ -592,12 +646,33 @@ function CotizacionTab({
   );
 }
 
-// ─── Field helper ─────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function MultiplierCard({
+  label,
+  value,
+  multiplier,
+}: {
+  label: string;
+  value: string;
+  multiplier: string;
+}) {
+  return (
+    <div
+      className="rounded-xl p-3 border border-white/[0.06] text-center"
+      style={{ background: '#1a2235' }}
+    >
+      <p className="text-xs text-slate-500 mb-1">{label}</p>
+      <p className="font-semibold text-white text-sm">{value}</p>
+      <p className="text-sm text-orange-400 font-mono mt-1">{multiplier}</p>
+    </div>
+  );
+}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
         {label}
       </label>
       {children}
