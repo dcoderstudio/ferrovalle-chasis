@@ -63,12 +63,15 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
           userRole: selected.role,
         });
         onLogin();
+      } else if (json.reason === 'not_configured' || json.reason === 'db_error') {
+        setError(`Error del servidor (${json.reason}). Avisa al administrador.`);
+        setLoading(false);
       } else {
         setError('Contraseña incorrecta');
         setLoading(false);
       }
     } catch {
-      setError('Error de conexión. Intenta de nuevo.');
+      setError('Sin conexión. Verifica tu internet e intenta de nuevo.');
       setLoading(false);
     }
   };

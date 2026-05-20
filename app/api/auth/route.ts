@@ -10,10 +10,10 @@ function getDb() {
 
 export async function POST(request: Request) {
   const db = getDb();
-  if (!db) return NextResponse.json({ ok: false, error: 'not_configured' }, { status: 503 });
+  if (!db) return NextResponse.json({ ok: false, reason: 'not_configured' }, { status: 503 });
 
   const { userId, passwordHash } = await request.json();
-  if (!userId || !passwordHash) return NextResponse.json({ ok: false });
+  if (!userId || !passwordHash) return NextResponse.json({ ok: false, reason: 'missing_fields' });
 
   const { data, error } = await db
     .from('users')
@@ -21,9 +21,22 @@ export async function POST(request: Request) {
     .eq('id', userId)
     .eq('password_hash', passwordHash);
 
-  if (error || !data || data.length === 0) {
-    return NextResponse.json({ ok: false });
+  if (error) {
+    return NextResponse.json({ ok: false, reason: 'db_error', detail: error.message }, { status: 500 });
+  }
+
+  if (!data || data.length === 0) {
+    return NextResponse.json({ ok: false, reason: 'wrong_password' });
   }
 
   return NextResponse.json({ ok: true, user: data[0] });
+}
+
+// GET for connectivity test
+export async function GET() {
+  const db = getDb();
+  if (!db) return NextResponse.json({ status: 'not_configured' });
+  const { error } = await db.from('users').select('id').limit(1);
+  if (error) return NextResponse.json({ status: 'db_error', detail: error.message });
+  return NextResponse.json({ status: 'ok' });
 }
