@@ -1,47 +1,51 @@
-import { createClient } from '@supabase/supabase-js';
 import type { Chassis } from '../types';
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+const url = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(/\/$/, '');
 const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
-
-const supabase = url && key ? createClient(url, key) : null;
+const REST = url ? `${url}/rest/v1` : '';
 
 export function isConfigured(): boolean {
-  return !!supabase;
+  return !!(url && key);
 }
 
 export async function loadChassis(): Promise<Chassis[] | null> {
-  if (!supabase) return null;
+  if (!REST || !key) return null;
   try {
-    const { data, error } = await supabase
-      .from('app_data')
-      .select('value')
-      .eq('key', 'chassis')
-      .single();
-    if (error) {
-      console.error('[Supabase] load error:', error.message);
+    const res = await fetch(`${REST}/app_data?key=eq.chassis&select=value`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+    });
+    if (!res.ok) {
+      console.error('[DB] load error:', res.status, await res.text());
       return null;
     }
-    return (data?.value ?? []) as Chassis[];
+    const rows: { value: Chassis[] }[] = await res.json();
+    return rows.length ? rows[0].value : null;
   } catch (e) {
-    console.error('[Supabase] load exception:', e);
+    console.error('[DB] load exception:', e);
     return null;
   }
 }
 
 export async function saveChassis(list: Chassis[]): Promise<boolean> {
-  if (!supabase) return false;
+  if (!REST || !key) return false;
   try {
-    const { error } = await supabase
-      .from('app_data')
-      .upsert({ key: 'chassis', value: list, updated_at: new Date().toISOString() });
-    if (error) {
-      console.error('[Supabase] save error:', error.message);
+    const res = await fetch(`${REST}/app_data?key=eq.chassis`, {
+      method: 'PATCH',
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({ value: list, updated_at: new Date().toISOString() }),
+    });
+    if (!res.ok) {
+      console.error('[DB] save error:', res.status, await res.text());
       return false;
     }
     return true;
   } catch (e) {
-    console.error('[Supabase] save exception:', e);
+    console.error('[DB] save exception:', e);
     return false;
   }
 }
