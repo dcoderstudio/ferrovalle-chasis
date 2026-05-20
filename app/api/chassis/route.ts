@@ -9,8 +9,19 @@ function getClient() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const db = getClient();
+  const { searchParams } = new URL(request.url);
+
+  // Debug: test a write operation
+  if (searchParams.get('test') === 'write') {
+    if (!db) return NextResponse.json({ error: 'not_configured', service_key: !!process.env.SUPABASE_SERVICE_KEY, anon_key: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY });
+    const { error } = await db
+      .from('app_data')
+      .upsert({ key: 'chassis', value: [{ debug: true, t: Date.now() }], updated_at: new Date().toISOString() });
+    return NextResponse.json({ write_error: error?.message ?? null, write_code: error?.code ?? null, ok: !error });
+  }
+
   if (!db) {
     return NextResponse.json({ error: 'not_configured', url: !!process.env.NEXT_PUBLIC_SUPABASE_URL, key: !!process.env.SUPABASE_SERVICE_KEY }, { status: 503 });
   }
