@@ -188,6 +188,12 @@ export default function KanbanApp() {
     setSelectedChassis(null);
   };
 
+  const handleTogglePriority = (id: string) => {
+    setChassislist(prev =>
+      prev.map(c => c.id === id ? { ...c, priority: !c.priority } : c)
+    );
+  };
+
   const handleDrop = (col: ChassisStatus) => {
     if (!draggedId) return;
     setChassislist(prev =>
@@ -341,7 +347,7 @@ export default function KanbanApp() {
 
                 {/* Cards */}
                 <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5">
-                  {items.map(chassis => (
+                  {[...items].sort((a, b) => (b.priority ? 1 : 0) - (a.priority ? 1 : 0)).map(chassis => (
                     <ChassisCard
                       key={chassis.id}
                       chassis={chassis}
@@ -353,6 +359,7 @@ export default function KanbanApp() {
                         setDragOverCol(null);
                       }}
                       onClick={() => setSelectedChassis(chassis)}
+                      onTogglePriority={() => handleTogglePriority(chassis.id)}
                     />
                   ))}
                   {items.length === 0 && (
@@ -423,6 +430,7 @@ function ChassisCard({
   onDragStart,
   onDragEnd,
   onClick,
+  onTogglePriority,
 }: {
   chassis: Chassis;
   isDragging: boolean;
@@ -430,6 +438,7 @@ function ChassisCard({
   onDragStart: () => void;
   onDragEnd: () => void;
   onClick: () => void;
+  onTogglePriority: () => void;
 }) {
   const isOverdue =
     chassis.commitmentDate &&
@@ -461,18 +470,32 @@ function ChassisCard({
     >
       <div className={`h-[3px] ${bar}`} />
       <div className="p-3.5">
-        {/* Number + PO */}
+        {/* Number + flag */}
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="min-w-0">
             <p className="font-bold text-white text-sm leading-tight">
               #{chassis.chassisNumber || '—'}
             </p>
+            {chassis.purchaseOrder && (
+              <span className="text-xs bg-white/[0.06] text-slate-500 px-1.5 py-0.5 rounded-md font-mono mt-0.5 inline-block truncate max-w-[120px]">
+                {chassis.purchaseOrder}
+              </span>
+            )}
           </div>
-          {chassis.purchaseOrder && (
-            <span className="text-xs bg-white/[0.06] text-slate-500 px-1.5 py-0.5 rounded-md font-mono shrink-0 max-w-[80px] truncate">
-              {chassis.purchaseOrder}
-            </span>
-          )}
+          <button
+            onMouseDown={e => e.stopPropagation()}
+            onClick={e => { e.stopPropagation(); onTogglePriority(); }}
+            className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+              chassis.priority
+                ? 'bg-orange-400/20 text-orange-400'
+                : 'text-slate-700 hover:text-slate-400 hover:bg-white/[0.05]'
+            }`}
+            title={chassis.priority ? 'Quitar prioridad' : 'Marcar como prioridad'}
+          >
+            <svg viewBox="0 0 14 14" className="w-3.5 h-3.5" fill="currentColor">
+              <path d="M1 1v12M1 1h9l-2.5 4L10 9H1V1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" fill={chassis.priority ? 'currentColor' : 'none'} />
+            </svg>
+          </button>
         </div>
 
         {/* Date */}
@@ -556,6 +579,7 @@ function AddChassisModal({
       pdfQuotation: '',
       pdfQuotationName: '',
       completedServices: [],
+      priority: false,
     });
     return true;
   };
