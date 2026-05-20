@@ -5,6 +5,8 @@ import Image from 'next/image';
 import type { UserProfile } from '../lib/auth';
 import { hashPassword, setSession } from '../lib/auth';
 
+const CACHE_KEY = 'ferrovalle-users-cache';
+
 export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [selected, setSelected] = useState<UserProfile | null>(null);
@@ -13,9 +15,24 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Show cached users immediately
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) setUsers(parsed);
+      }
+    } catch {}
+
+    // Fetch fresh data in background and update cache
     fetch('/api/users')
       .then(r => r.json())
-      .then(data => Array.isArray(data) ? setUsers(data) : null)
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setUsers(data);
+          try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -70,7 +87,18 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
 
       {/* Profile grid */}
       {users.length === 0 ? (
-        <p className="text-slate-600 text-sm">Cargando perfiles...</p>
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex gap-2">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="w-16 h-16 rounded-2xl animate-pulse"
+                style={{ background: 'rgba(255,255,255,0.05)', animationDelay: `${i * 80}ms` }}
+              />
+            ))}
+          </div>
+          <p className="text-slate-700 text-xs">Cargando perfiles...</p>
+        </div>
       ) : (
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-5 max-w-2xl w-full">
           {users.map(user => (
