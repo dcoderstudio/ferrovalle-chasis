@@ -5,10 +5,12 @@ import type { Chassis, ChassisStatus, ChassisSize, ChassisCondition } from '../t
 // ChassisSize and ChassisCondition used in cast expressions below
 import {
   SERVICES,
+  CATEGORIES,
   SIZE_MULTIPLIERS,
   CONDITION_MULTIPLIERS,
   SIZE_LABELS,
   CONDITION_LABELS,
+  type Service,
 } from '../services-catalog';
 import { PillGrid, DatePicker, type PillOption } from './FormControls';
 
@@ -149,12 +151,12 @@ export default function ChassisModal({
 
   const sizeMultiplier = SIZE_MULTIPLIERS[data.size] ?? 1;
   const conditionMultiplier = CONDITION_MULTIPLIERS[data.condition] ?? 1;
-  const serviceUnitPrice = (basePrice: number) =>
-    Math.round(basePrice * sizeMultiplier * conditionMultiplier);
+  const serviceUnitPrice = (svc: Service) =>
+    Math.round(svc.basePrice * (svc.affectedBySize ? sizeMultiplier : 1) * conditionMultiplier);
 
   const quotedTotal = data.selectedServices.reduce((sum, sel) => {
     const svc = SERVICES.find(s => s.id === sel.serviceId);
-    return svc ? sum + serviceUnitPrice(svc.basePrice) * sel.quantity : sum;
+    return svc ? sum + serviceUnitPrice(svc) * sel.quantity : sum;
   }, 0);
 
   const TABS: Array<{ id: Tab; label: string }> = [
@@ -171,7 +173,7 @@ export default function ChassisModal({
     const selectedList = data.selectedServices.map(sel => {
       const svc = SERVICES.find(s => s.id === sel.serviceId);
       if (!svc) return null;
-      return { name: svc.name, unit: svc.unit, quantity: sel.quantity, total: serviceUnitPrice(svc.basePrice) * sel.quantity };
+      return { name: svc.name, quantity: sel.quantity, total: serviceUnitPrice(svc) * sel.quantity };
     }).filter(Boolean);
 
     const chassisSVG = `<svg viewBox="0 0 800 210" xmlns="http://www.w3.org/2000/svg">
@@ -207,7 +209,7 @@ export default function ChassisModal({
     </svg>`;
 
     const servicesRows = selectedList.length > 0
-      ? selectedList.map(s => `<tr><td>${s!.name}</td><td style="text-align:center">${s!.quantity} ${s!.unit}</td><td style="text-align:right;font-weight:600;color:#1e3a5f">${formatCurrency(s!.total)}</td></tr>`).join('')
+      ? selectedList.map(s => `<tr><td>${s!.name}</td><td style="text-align:center">${s!.quantity}</td><td style="text-align:right;font-weight:600;color:#1e3a5f">${formatCurrency(s!.total)}</td></tr>`).join('')
       : `<tr><td colspan="3" style="color:#94a3b8;font-style:italic;text-align:center">No se han seleccionado servicios aún</td></tr>`;
 
     const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
@@ -373,7 +375,6 @@ export default function ChassisModal({
           {activeTab === 'diagnostico' && (
             <DiagnosticoTab
               data={data}
-              update={update}
               toggleService={toggleService}
               updateQty={updateQty}
               serviceUnitPrice={serviceUnitPrice}
@@ -724,7 +725,6 @@ function FotosTab({
 
 function DiagnosticoTab({
   data,
-  update,
   toggleService,
   updateQty,
   serviceUnitPrice,
@@ -732,118 +732,144 @@ function DiagnosticoTab({
   onGeneratePDF,
 }: {
   data: Chassis;
-  update: (f: Partial<Chassis>) => void;
   toggleService: (id: string) => void;
   updateQty: (id: string, qty: number) => void;
-  serviceUnitPrice: (base: number) => number;
+  serviceUnitPrice: (svc: Service) => number;
   quotedTotal: number;
   onGeneratePDF: () => void;
 }) {
+  const [search, setSearch] = useState('');
   const sizeMultiplier = SIZE_MULTIPLIERS[data.size] ?? 1;
   const conditionMultiplier = CONDITION_MULTIPLIERS[data.condition] ?? 1;
   const combined = Math.round(sizeMultiplier * conditionMultiplier * 100) / 100;
 
-  return (
-    <div className="space-y-6">
-      {/* Multiplier cards */}
+  const q = search.toLowerCase();
+  const filtered = q
+    ? SERVICES.filter(s => s.name.toLowerCase().includes(q))
+    : null;
+
+  const renderService = (svc: Service) => {
+    const sel = data.selectedServices.find(s => s.serviceId === svc.id);
+    const unitPrice = serviceUnitPrice(svc);
+    const subtotal = sel ? unitPrice * sel.quantity : 0;
+    return (
       <div
-        className="rounded-xl border border-white/[0.06] p-4"
-        style={{ background: '#141b2d' }}
+        key={svc.id}
+        className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all ${
+          sel ? 'border-orange-400/25 bg-orange-400/[0.06]' : 'border-white/[0.05] hover:border-white/10'
+        }`}
+        style={!sel ? { background: '#141b2d' } : undefined}
       >
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-          Factores de ajuste de precio
-        </p>
-        <div className="grid grid-cols-3 gap-3">
-          <MultiplierCard
-            label="Tamaño"
-            value={SIZE_LABELS[data.size]?.split(' ')[0] ?? data.size}
-            multiplier={`×${sizeMultiplier}`}
-          />
-          <MultiplierCard
-            label="Condición"
-            value={CONDITION_LABELS[data.condition]?.split(' ')[0] ?? data.condition}
-            multiplier={`×${conditionMultiplier}`}
-          />
-          <div
-            className="rounded-xl p-3 border border-orange-400/20 text-center"
-            style={{ background: 'rgba(249,115,22,0.08)' }}
+        <input
+          type="checkbox"
+          checked={!!sel}
+          onChange={() => toggleService(svc.id)}
+          className="w-4 h-4 accent-orange-500 shrink-0 cursor-pointer"
+        />
+        <div className="flex-1 min-w-0">
+          <p className={`text-xs font-medium leading-tight ${sel ? 'text-orange-200' : 'text-slate-300'}`}>
+            {svc.name}
+          </p>
+          <span
+            className={`inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+              svc.affectedBySize
+                ? 'bg-blue-500/15 text-blue-400'
+                : 'bg-white/[0.06] text-slate-600'
+            }`}
           >
-            <p className="text-xs text-orange-400/70 mb-1">Factor total</p>
-            <p className="font-bold text-orange-300 text-2xl">×{combined}</p>
+            {svc.affectedBySize ? '×Tamaño' : 'Precio fijo'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="text-right">
+            <p className="text-xs text-slate-600 whitespace-nowrap">{formatCurrency(unitPrice)}</p>
+            {sel && <p className="text-xs font-bold text-orange-400">{formatCurrency(subtotal)}</p>}
           </div>
+          {sel && (
+            <div className="flex items-center gap-0.5">
+              <button onClick={() => updateQty(svc.id, sel.quantity - 1)}
+                className="w-6 h-6 bg-white/[0.05] border border-white/[0.08] hover:bg-white/10 rounded-lg text-xs text-white font-bold">−</button>
+              <span className="w-7 text-center text-xs font-mono font-bold text-white">{sel.quantity}</span>
+              <button onClick={() => updateQty(svc.id, sel.quantity + 1)}
+                className="w-6 h-6 bg-white/[0.05] border border-white/[0.08] hover:bg-white/10 rounded-lg text-xs text-white font-bold">+</button>
+            </div>
+          )}
         </div>
       </div>
+    );
+  };
 
-      {/* Services */}
-      <div>
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-          Servicios
+  return (
+    <div className="space-y-4">
+      {/* Factor panel */}
+      <div className="rounded-xl border border-white/[0.06] p-3" style={{ background: '#141b2d' }}>
+        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Factores de precio</p>
+        <div className="grid grid-cols-3 gap-2">
+          <MultiplierCard label="Tamaño" value={SIZE_LABELS[data.size] ?? data.size} multiplier={`×${sizeMultiplier}`} />
+          <MultiplierCard label="Condición" value={CONDITION_LABELS[data.condition]?.split(' ')[0] ?? data.condition} multiplier={`×${conditionMultiplier}`} />
+          <div className="rounded-xl p-2.5 border border-orange-400/20 text-center" style={{ background: 'rgba(249,115,22,0.08)' }}>
+            <p className="text-[10px] text-orange-400/70 mb-0.5">Factor total</p>
+            <p className="font-bold text-orange-300 text-xl">×{combined}</p>
+          </div>
+        </div>
+        <p className="text-[10px] text-slate-600 mt-2">
+          <span className="text-blue-400 font-semibold">●</span> ×Tamaño: el precio varía según 20 ft / 40 ft &nbsp;·&nbsp;
+          <span className="text-slate-500 font-semibold">●</span> Precio fijo: el mismo independiente del tamaño
         </p>
-        <div className="space-y-2">
-          {SERVICES.map(svc => {
-            const sel = data.selectedServices.find(s => s.serviceId === svc.id);
-            const unitPrice = serviceUnitPrice(svc.basePrice);
-            const subtotal = sel ? unitPrice * sel.quantity : 0;
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          className="w-full bg-[#1a2235] border border-white/[0.08] rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+          placeholder="Buscar servicio..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        {search && (
+          <button onClick={() => setSearch('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white text-sm">✕</button>
+        )}
+      </div>
+
+      {/* Services list */}
+      {filtered ? (
+        <div className="space-y-1.5">
+          {filtered.length === 0 ? (
+            <p className="text-center text-slate-600 text-sm py-6">Sin resultados para &ldquo;{search}&rdquo;</p>
+          ) : (
+            filtered.map(renderService)
+          )}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {CATEGORIES.map(cat => {
+            const svcs = SERVICES.filter(s => s.category === cat);
+            if (svcs.length === 0) return null;
             return (
-              <div
-                key={svc.id}
-                className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                  sel
-                    ? 'border-orange-400/25 bg-orange-400/[0.06]'
-                    : 'border-white/[0.06] hover:border-white/[0.10]'
-                }`}
-                style={!sel ? { background: '#141b2d' } : undefined}
-              >
-                <input
-                  type="checkbox"
-                  checked={!!sel}
-                  onChange={() => toggleService(svc.id)}
-                  className="w-4 h-4 accent-orange-500 shrink-0 cursor-pointer"
-                />
-                <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-sm font-medium ${sel ? 'text-orange-200' : 'text-slate-300'}`}
-                  >
-                    {svc.name}
-                  </p>
-                  <p className="text-xs text-slate-600 truncate">{svc.description}</p>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="text-right">
-                    <p className="text-xs text-slate-600 whitespace-nowrap">
-                      {formatCurrency(unitPrice)}/{svc.unit}
-                    </p>
-                    {sel && (
-                      <p className="text-sm font-bold text-orange-400">
-                        {formatCurrency(subtotal)}
-                      </p>
-                    )}
-                  </div>
-                  {sel && (
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => updateQty(svc.id, sel.quantity - 1)}
-                        className="w-7 h-7 bg-white/[0.05] border border-white/[0.08] hover:bg-white/10 rounded-lg text-sm text-white font-bold leading-none"
-                      >
-                        −
-                      </button>
-                      <span className="w-8 text-center text-sm font-mono font-bold text-white">
-                        {sel.quantity}
-                      </span>
-                      <button
-                        onClick={() => updateQty(svc.id, sel.quantity + 1)}
-                        className="w-7 h-7 bg-white/[0.05] border border-white/[0.08] hover:bg-white/10 rounded-lg text-sm text-white font-bold leading-none"
-                      >
-                        +
-                      </button>
-                    </div>
-                  )}
-                </div>
+              <div key={cat}>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 px-0.5">{cat}</p>
+                <div className="space-y-1.5">{svcs.map(renderService)}</div>
               </div>
             );
           })}
         </div>
-      </div>
+      )}
+
+      {/* Running total */}
+      {quotedTotal > 0 && (
+        <div className="sticky bottom-0 flex items-center justify-between rounded-xl border border-orange-400/20 px-4 py-3"
+          style={{ background: 'rgba(15,20,32,0.95)', backdropFilter: 'blur(8px)' }}>
+          <div>
+            <p className="text-xs text-slate-400">{data.selectedServices.length} servicio{data.selectedServices.length !== 1 ? 's' : ''} seleccionado{data.selectedServices.length !== 1 ? 's' : ''}</p>
+          </div>
+          <p className="text-xl font-bold text-orange-400">{formatCurrency(quotedTotal)}</p>
+        </div>
+      )}
 
       {/* PDF Button */}
       <button
@@ -854,8 +880,7 @@ function DiagnosticoTab({
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
-          <line x1="12" y1="18" x2="12" y2="12"/>
-          <line x1="9" y1="15" x2="15" y2="15"/>
+          <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
         </svg>
         Descargar PDF de diagnóstico
       </button>
@@ -871,7 +896,7 @@ function CotizacionTab({
   quotedTotal,
 }: {
   data: Chassis;
-  serviceUnitPrice: (base: number) => number;
+  serviceUnitPrice: (svc: Service) => number;
   quotedTotal: number;
 }) {
   if (data.selectedServices.length === 0) {
@@ -902,7 +927,7 @@ function CotizacionTab({
       {data.selectedServices.map(sel => {
         const svc = SERVICES.find(s => s.id === sel.serviceId);
         if (!svc) return null;
-        const unitPrice = serviceUnitPrice(svc.basePrice);
+        const unitPrice = serviceUnitPrice(svc);
         const subtotal = unitPrice * sel.quantity;
         return (
           <div
@@ -913,7 +938,7 @@ function CotizacionTab({
             <div className="min-w-0">
               <p className="text-white font-semibold text-sm">{svc.name}</p>
               <p className="text-slate-500 text-xs mt-0.5">
-                {sel.quantity} {svc.unit} × {formatCurrency(unitPrice)}
+                {sel.quantity} × {formatCurrency(unitPrice)}
               </p>
             </div>
             <p className="text-orange-400 font-bold text-sm shrink-0 ml-4">
