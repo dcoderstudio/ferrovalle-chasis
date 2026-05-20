@@ -940,37 +940,46 @@ function DiagnosticoTab({
         </div>
       )}
 
-      {/* Running total (admin only) */}
-      {!hidePrice && quotedTotal > 0 && (
-        <div className="sticky bottom-0 flex items-center justify-between rounded-xl border border-orange-400/20 px-4 py-3"
-          style={{ background: 'rgba(15,20,32,0.95)', backdropFilter: 'blur(8px)' }}>
-          <div>
-            <p className="text-xs text-slate-400">{data.selectedServices.length} servicio{data.selectedServices.length !== 1 ? 's' : ''} seleccionado{data.selectedServices.length !== 1 ? 's' : ''}</p>
-          </div>
-          <p className="text-xl font-bold text-orange-400">{formatCurrency(quotedTotal)}</p>
+      {/* Sticky bottom bar — always visible */}
+      <div className="sticky bottom-0 flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
+        style={{
+          background: 'rgba(15,20,32,0.97)',
+          backdropFilter: 'blur(8px)',
+          borderColor: hidePrice ? 'rgba(14,165,233,0.2)' : 'rgba(249,115,22,0.2)',
+        }}>
+        {/* Left: count / total */}
+        <div className="min-w-0">
+          {data.selectedServices.length > 0 ? (
+            <>
+              <p className="text-xs text-slate-500">
+                {data.selectedServices.length} servicio{data.selectedServices.length !== 1 ? 's' : ''}
+              </p>
+              {!hidePrice && quotedTotal > 0 && (
+                <p className="text-lg font-bold text-orange-400 leading-tight">{formatCurrency(quotedTotal)}</p>
+              )}
+            </>
+          ) : (
+            <p className="text-xs text-slate-600">Sin servicios seleccionados</p>
+          )}
         </div>
-      )}
-      {/* Service count for diagnostico role */}
-      {hidePrice && data.selectedServices.length > 0 && (
-        <div className="sticky bottom-0 flex items-center justify-center rounded-xl border border-blue-400/20 px-4 py-3"
-          style={{ background: 'rgba(15,20,32,0.95)', backdropFilter: 'blur(8px)' }}>
-          <p className="text-sm text-blue-300 font-semibold">{data.selectedServices.length} servicio{data.selectedServices.length !== 1 ? 's' : ''} marcado{data.selectedServices.length !== 1 ? 's' : ''}</p>
-        </div>
-      )}
-
-      {/* PDF Button */}
-      <button
-        onClick={onGeneratePDF}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-white/[0.08] text-sm font-semibold text-slate-300 hover:text-white hover:border-white/20 transition-all"
-        style={{ background: '#141b2d' }}
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
-        </svg>
-        Descargar PDF de diagnóstico
-      </button>
+        {/* Right: PDF button */}
+        <button
+          onClick={onGeneratePDF}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold transition-all hover:opacity-90 active:scale-95 shrink-0"
+          style={{
+            background: hidePrice ? 'rgba(14,165,233,0.12)' : 'rgba(249,115,22,0.12)',
+            borderColor: hidePrice ? 'rgba(14,165,233,0.3)' : 'rgba(249,115,22,0.3)',
+            color: hidePrice ? '#38bdf8' : '#fb923c',
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 shrink-0">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+          Descargar PDF
+        </button>
+      </div>
     </div>
   );
 }
