@@ -1,6 +1,27 @@
 'use client';
 
 import { useState } from 'react';
+
+// Resize + compress image to JPEG, max 1200px wide, quality 0.75
+function compressImage(file: File): Promise<string> {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX = 1200;
+      let { width, height } = img;
+      if (width > MAX) { height = Math.round(height * MAX / width); width = MAX; }
+      if (height > MAX) { width = Math.round(width * MAX / height); height = MAX; }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.75));
+    };
+    img.src = url;
+  });
+}
 import type { Chassis, ChassisStatus, ChassisSize, ChassisCondition } from '../types';
 // ChassisSize and ChassisCondition used in cast expressions below
 import {
@@ -123,15 +144,7 @@ export default function ChassisModal({
   ) => {
     const files = e.target.files;
     if (!files || !files.length) return;
-    const promises = Array.from(files).map(
-      file =>
-        new Promise<string>(resolve => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
-        })
-    );
-    Promise.all(promises).then(newPhotos => {
+    Promise.all(Array.from(files).map(compressImage)).then(newPhotos => {
       update({ [field]: [...data[field], ...newPhotos].slice(0, 6) });
     });
     e.target.value = '';

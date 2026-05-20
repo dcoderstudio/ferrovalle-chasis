@@ -1,6 +1,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
+function compressImage(file: File): Promise<string> {
+  return new Promise(resolve => {
+    const img = document.createElement('img') as HTMLImageElement;
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX = 1200;
+      let { width, height } = img;
+      if (width > MAX) { height = Math.round(height * MAX / width); width = MAX; }
+      if (height > MAX) { width = Math.round(width * MAX / height); height = MAX; }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.75));
+    };
+    img.src = url;
+  });
+}
 import type { Chassis, ChassisStatus, ChassisSize, ChassisCondition } from '../types';
 import Image from 'next/image';
 import { SIZE_LABELS } from '../services-catalog';
@@ -635,9 +655,7 @@ function AddChassisModal({
   const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => setPhotoBefore(reader.result as string);
-    reader.readAsDataURL(file);
+    compressImage(file).then(setPhotoBefore);
     e.target.value = '';
   };
 
