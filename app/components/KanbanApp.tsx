@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import type { Chassis, ChassisStatus, ChassisSize, ChassisCondition } from '../types';
 import Image from 'next/image';
 import { SIZE_LABELS } from '../services-catalog';
+import { loadChassis, saveChassis } from '../lib/supabase';
 import ChassisModal from './ChassisModal';
 import { PillGrid, DatePicker, type PillOption } from './FormControls';
 
@@ -119,16 +120,25 @@ export default function KanbanApp() {
   const [dragOverCol, setDragOverCol] = useState<ChassisStatus | null>(null);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('ferrovalle-chassis');
-      if (stored) setChassislist(JSON.parse(stored));
-    } catch {}
+    const init = async () => {
+      // Try cloud first, fall back to localStorage
+      const cloud = await loadChassis();
+      if (cloud) {
+        setChassislist(cloud);
+        try { localStorage.setItem('ferrovalle-chassis', JSON.stringify(cloud)); } catch {}
+        return;
+      }
+      try {
+        const stored = localStorage.getItem('ferrovalle-chassis');
+        if (stored) setChassislist(JSON.parse(stored));
+      } catch {}
+    };
+    init();
   }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('ferrovalle-chassis', JSON.stringify(chassisList));
-    } catch {}
+    try { localStorage.setItem('ferrovalle-chassis', JSON.stringify(chassisList)); } catch {}
+    saveChassis(chassisList).catch(() => {});
   }, [chassisList]);
 
   const handleAddChassis = (data: Omit<Chassis, 'id' | 'createdAt'>) => {
