@@ -38,10 +38,10 @@ export const CONDITION_MULTIPLIERS: Record<string, number> = {
 };
 
 export const SIZE_LABELS: Record<string, string> = {
-  'pequeño': 'Pequeño (< 6m)',
-  'mediano': 'Mediano (6–10m)',
-  'grande': 'Grande (10–15m)',
-  'extra-grande': 'Extra Grande (> 15m)',
+  'pequeño': '20 ft',
+  'mediano': 'Mediano',
+  'grande': '40 ft',
+  'extra-grande': 'Extra Grande',
 };
 
 export const CONDITION_LABELS: Record<string, string> = {

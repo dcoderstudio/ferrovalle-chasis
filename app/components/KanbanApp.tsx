@@ -8,8 +8,8 @@ import ChassisModal from './ChassisModal';
 import { PillGrid, DatePicker, type PillOption } from './FormControls';
 
 const SIZE_OPTIONS: PillOption[] = [
-  { value: 'pequeño', label: 'Chico', sublabel: 'Chasis menor' },
-  { value: 'grande', label: 'Grande', sublabel: 'Chasis mayor' },
+  { value: 'pequeño', label: '20 ft', sublabel: 'Chasis estándar' },
+  { value: 'grande', label: '40 ft', sublabel: 'Chasis extendido' },
 ];
 
 const CONDITION_OPTIONS: PillOption[] = [

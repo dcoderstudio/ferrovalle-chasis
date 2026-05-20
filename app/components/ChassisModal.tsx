@@ -13,9 +13,9 @@ import {
 import { PillGrid, DatePicker, type PillOption } from './FormControls';
 
 const SIZE_OPTIONS: PillOption[] = [
-  { value: 'pequeño', label: 'Pequeño', sublabel: '< 6m' },
+  { value: 'pequeño', label: '20 ft', sublabel: 'Chasis estándar' },
   { value: 'mediano', label: 'Mediano', sublabel: '6–10m' },
-  { value: 'grande', label: 'Grande', sublabel: '10–15m' },
+  { value: 'grande', label: '40 ft', sublabel: 'Chasis extendido' },
   { value: 'extra-grande', label: 'Extra Grande', sublabel: '> 15m' },
 ];
 
