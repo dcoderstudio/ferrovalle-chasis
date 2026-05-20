@@ -30,7 +30,10 @@ export async function GET() {
   if (!db) return NextResponse.json({ error: 'not_configured' }, { status: 503 });
 
   const hash = createHash('sha256').update('FERROVALLE', 'utf8').digest('hex');
-  const allUsers = [...ADMIN_USERS, ...DIAGNOSIS_USERS].map(u => ({ ...u, password_hash: hash }));
+  // Only insert columns that are guaranteed to exist (role column requires migration)
+  const allUsers = [...ADMIN_USERS, ...DIAGNOSIS_USERS].map(({ id, name, initials, color }) => ({
+    id, name, initials, color, password_hash: hash,
+  }));
 
   const { error } = await db.from('users').upsert(allUsers);
   if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
