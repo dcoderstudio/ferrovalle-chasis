@@ -38,7 +38,7 @@ type ColumnConfig = {
 const COLUMNS: ColumnConfig[] = [
   {
     id: 'recibido',
-    label: 'Recibido',
+    label: 'Chasis',
     border: 'border-cyan-400/20',
     borderOver: 'border-cyan-400/60',
     headerBg: 'bg-cyan-400/10',
@@ -74,7 +74,7 @@ const COLUMNS: ColumnConfig[] = [
   },
   {
     id: 'acabados',
-    label: 'Acabados',
+    label: 'Pintura y Rotulación',
     border: 'border-purple-400/20',
     borderOver: 'border-purple-400/60',
     headerBg: 'bg-purple-400/10',
@@ -126,6 +126,8 @@ export default function KanbanApp() {
   const [authChecked, setAuthChecked] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     const s = getSession();
@@ -308,8 +310,79 @@ export default function KanbanApp() {
         </div>
       </header>
 
+      {/* Search bar */}
+      <div className="shrink-0 px-5 pt-4 pb-2 relative">
+        <div className="relative max-w-md">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            className="w-full bg-[#0e1420] border border-white/[0.08] rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40"
+            placeholder="Buscar por número de chasis u OC..."
+            value={searchQuery}
+            onChange={e => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+            onFocus={() => setSearchOpen(true)}
+            onBlur={() => setTimeout(() => setSearchOpen(false), 150)}
+          />
+          {searchQuery && (
+            <button onClick={() => { setSearchQuery(''); setSearchOpen(false); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white text-sm">✕</button>
+          )}
+        </div>
+
+        {/* Search results dropdown */}
+        {searchOpen && searchQuery.trim() && (() => {
+          const q = searchQuery.toLowerCase();
+          const results = chassisList.filter(c =>
+            c.chassisNumber.toLowerCase().includes(q) ||
+            c.purchaseOrder.toLowerCase().includes(q)
+          );
+          const colLabel = (status: ChassisStatus) =>
+            COLUMNS.find(c => c.id === status)?.label ?? status;
+          const colBadge = (status: ChassisStatus) =>
+            COLUMNS.find(c => c.id === status);
+          return (
+            <div className="absolute left-0 right-0 top-full mt-1 max-w-md rounded-xl border border-white/[0.10] shadow-2xl shadow-black/60 z-30 overflow-hidden"
+              style={{ background: '#0e1420' }}>
+              {results.length === 0 ? (
+                <div className="px-4 py-4 text-sm text-slate-500 text-center">
+                  No se encontró ningún chasis
+                </div>
+              ) : (
+                results.slice(0, 8).map(chassis => {
+                  const col = colBadge(chassis.status);
+                  return (
+                    <button
+                      key={chassis.id}
+                      onMouseDown={() => { setSelectedChassis(chassis); setSearchQuery(''); setSearchOpen(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.04] transition-colors text-left border-b border-white/[0.04] last:border-0"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-white font-semibold text-sm">#{chassis.chassisNumber}</p>
+                          {chassis.priority && (
+                            <span className="text-orange-400 text-xs">🚩</span>
+                          )}
+                        </div>
+                        {chassis.purchaseOrder && (
+                          <p className="text-slate-600 text-xs mt-0.5">{chassis.purchaseOrder}</p>
+                        )}
+                      </div>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${col?.badge}`}>
+                        {colLabel(chassis.status)}
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          );
+        })()}
+      </div>
+
       {/* Board */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-5">
+      <div className="flex-1 overflow-x-auto overflow-y-hidden p-5 pt-2">
         <div className="flex gap-4 h-full" style={{ minWidth: 'max-content' }}>
           {COLUMNS.map(col => {
             const items = chassisList.filter(c => c.status === col.id);

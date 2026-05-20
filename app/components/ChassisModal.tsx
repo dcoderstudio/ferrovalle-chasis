@@ -960,10 +960,10 @@ function CotizacionTab({
 // ─── Status Stepper ───────────────────────────────────────────────────────────
 
 const STEPS: Array<{ id: ChassisStatus; label: string; color: string }> = [
-  { id: 'recibido',      label: 'Recibido',     color: '#22d3ee' },
+  { id: 'recibido',      label: 'Chasis',        color: '#22d3ee' },
   { id: 'diagnostico',   label: 'Diagnóstico',  color: '#60a5fa' },
   { id: 'en-reparacion', label: 'Reparación',   color: '#fb923c' },
-  { id: 'acabados',      label: 'Acabados',     color: '#c084fc' },
+  { id: 'acabados',      label: 'Pintura',       color: '#c084fc' },
   { id: 'inspeccion',    label: 'Insp. Final',  color: '#f472b6' },
   { id: 'entregado',     label: 'Entregado',    color: '#4ade80' },
 ];
