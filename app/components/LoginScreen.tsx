@@ -1,42 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
-import type { UserProfile } from '../lib/auth';
 import { hashPassword, setSession } from '../lib/auth';
 
-const CACHE_KEY = 'ferrovalle-users-cache';
+type DisplayUser = {
+  id: string;
+  name: string;
+  initials: string;
+  color: string;
+  role: 'admin' | 'diagnostico';
+};
+
+// Perfiles estáticos — se muestran de inmediato sin necesidad de red
+const USERS: DisplayUser[] = [
+  { id: 'sergio-barrera',    name: 'Sergio Barrera',         initials: 'SB', color: '#3b82f6', role: 'admin' },
+  { id: 'yesenia-acevedo',   name: 'Yesenia Acevedo',        initials: 'YA', color: '#ec4899', role: 'admin' },
+  { id: 'edgar-agreda',      name: 'Edgar Agreda',           initials: 'EA', color: '#f97316', role: 'admin' },
+  { id: 'victor-juarez',     name: 'Victor Juarez',          initials: 'VJ', color: '#8b5cf6', role: 'admin' },
+  { id: 'monica-romero',     name: 'Mónica Romero',          initials: 'MR', color: '#06b6d4', role: 'admin' },
+  { id: 'leonardo-morales',  name: 'Leonardo Morales',       initials: 'LM', color: '#22c55e', role: 'admin' },
+  { id: 'grupo-civaz',       name: 'Grupo Civaz',            initials: 'GC', color: '#f59e0b', role: 'admin' },
+  { id: 'tecnico-diag-1',    name: 'Técnico Diagnóstico 1',  initials: 'T1', color: '#0ea5e9', role: 'diagnostico' },
+  { id: 'tecnico-diag-2',    name: 'Técnico Diagnóstico 2',  initials: 'T2', color: '#0ea5e9', role: 'diagnostico' },
+  { id: 'tecnico-diag-3',    name: 'Técnico Diagnóstico 3',  initials: 'T3', color: '#0ea5e9', role: 'diagnostico' },
+];
 
 export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [selected, setSelected] = useState<UserProfile | null>(null);
+  const [selected, setSelected] = useState<DisplayUser | null>(null);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Show cached users immediately
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) setUsers(parsed);
-      }
-    } catch {}
-
-    // Fetch fresh data in background and update cache
-    fetch('/api/users')
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setUsers(data);
-          try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const handleSelect = (user: UserProfile) => {
+  const handleSelect = (user: DisplayUser) => {
     setSelected(user);
     setPassword('');
     setError('');
@@ -47,18 +43,33 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
     if (!selected || !password) return;
     setLoading(true);
     setError('');
-    const hash = await hashPassword(password);
-    if (hash === selected.password_hash) {
-      setSession({
-        userId: selected.id,
-        userName: selected.name,
-        userColor: selected.color,
-        userInitials: selected.initials,
-        userRole: selected.role ?? 'admin',
+
+    const passwordHash = await hashPassword(password);
+
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: selected.id, passwordHash }),
       });
-      onLogin();
-    } else {
-      setError('Contraseña incorrecta');
+      const json = await res.json();
+
+      if (json.ok) {
+        const user = json.user ?? selected;
+        setSession({
+          userId: user.id,
+          userName: user.name,
+          userColor: user.color,
+          userInitials: user.initials,
+          userRole: user.role ?? 'admin',
+        });
+        onLogin();
+      } else {
+        setError('Contraseña incorrecta');
+        setLoading(false);
+      }
+    } catch {
+      setError('Error de conexión. Intenta de nuevo.');
       setLoading(false);
     }
   };
@@ -68,7 +79,6 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
       className="min-h-screen flex flex-col items-center justify-center px-4"
       style={{ background: '#080c14' }}
     >
-      {/* Logo */}
       <Image
         src="/ferrovalle-logo.svg"
         alt="Ferrovalle"
@@ -85,44 +95,28 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
         ¿Quién está ingresando?
       </h2>
 
-      {/* Profile grid */}
-      {users.length === 0 ? (
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex gap-2">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="w-16 h-16 rounded-2xl animate-pulse"
-                style={{ background: 'rgba(255,255,255,0.05)', animationDelay: `${i * 80}ms` }}
-              />
-            ))}
-          </div>
-          <p className="text-slate-700 text-xs">Cargando perfiles...</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-5 max-w-2xl w-full">
-          {users.map(user => (
-            <button
-              key={user.id}
-              onClick={() => handleSelect(user)}
-              className="flex flex-col items-center gap-2.5 p-3 rounded-2xl hover:bg-white/[0.04] transition-all group"
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-5 max-w-2xl w-full">
+        {USERS.map(user => (
+          <button
+            key={user.id}
+            onClick={() => handleSelect(user)}
+            className="flex flex-col items-center gap-2.5 p-3 rounded-2xl hover:bg-white/[0.04] transition-all group"
+          >
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-105 transition-transform select-none"
+              style={{
+                background: `linear-gradient(135deg, ${user.color}, ${user.color}99)`,
+                boxShadow: `0 4px 20px ${user.color}40`,
+              }}
             >
-              <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-105 transition-transform select-none"
-                style={{
-                  background: `linear-gradient(135deg, ${user.color}, ${user.color}99)`,
-                  boxShadow: `0 4px 20px ${user.color}40`,
-                }}
-              >
-                {user.initials}
-              </div>
-              <span className="text-slate-500 text-xs text-center font-medium group-hover:text-slate-200 transition-colors leading-tight">
-                {user.name}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
+              {user.initials}
+            </div>
+            <span className="text-slate-500 text-xs text-center font-medium group-hover:text-slate-200 transition-colors leading-tight">
+              {user.name}
+            </span>
+          </button>
+        ))}
+      </div>
 
       {/* Password modal */}
       {selected && (
@@ -135,7 +129,6 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
             style={{ background: '#0e1420' }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Avatar */}
             <div className="flex flex-col items-center mb-6">
               <div
                 className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl mb-3 select-none"
@@ -147,6 +140,9 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
                 {selected.initials}
               </div>
               <p className="text-white font-semibold text-sm">{selected.name}</p>
+              {selected.role === 'diagnostico' && (
+                <p className="text-xs text-sky-400/70 mt-1 font-medium">Personal de Diagnóstico</p>
+              )}
             </div>
 
             <form onSubmit={handleLogin} className="space-y-3">
