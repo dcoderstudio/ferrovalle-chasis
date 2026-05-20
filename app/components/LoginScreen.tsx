@@ -124,25 +124,22 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex flex-col items-center mb-6">
-              <div className="relative">
-                <div
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl mb-3 select-none"
-                  style={{
-                    background: `linear-gradient(135deg, ${selected.color}, ${selected.color}99)`,
-                    boxShadow: `0 4px 24px ${selected.color}50`,
-                  }}
-                >
-                  {selected.initials}
-                </div>
-                {selected.role === 'diagnostico' && (
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-lg bg-sky-500 flex items-center justify-center shadow-lg">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="white" strokeWidth="1.5" className="w-3.5 h-3.5">
-                      <path d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z" />
-                    </svg>
-                  </div>
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl mb-3 select-none"
+                style={{
+                  background: `linear-gradient(135deg, ${selected.color}, ${selected.color}99)`,
+                  boxShadow: `0 4px 24px ${selected.color}50`,
+                }}
+              >
+                {selected.role === 'diagnostico' ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.7" className="w-8 h-8">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                  </svg>
+                ) : (
+                  <span>{selected.initials}</span>
                 )}
               </div>
-              <p className="text-white font-semibold text-sm mt-1">{selected.name}</p>
+              <p className="text-white font-semibold text-sm">{selected.name}</p>
               {selected.role === 'diagnostico' && (
                 <p className="text-xs text-sky-400/70 mt-0.5 font-medium">Personal de Revisión</p>
               )}
@@ -184,22 +181,19 @@ function ProfileButton({ user, onSelect, isDiagnosis = false }: { user: DisplayU
       onClick={() => onSelect(user)}
       className="flex flex-col items-center gap-2.5 p-3 rounded-2xl hover:bg-white/[0.04] transition-all group"
     >
-      <div className="relative">
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-105 transition-transform select-none"
-          style={{
-            background: `linear-gradient(135deg, ${user.color}, ${user.color}99)`,
-            boxShadow: `0 4px 20px ${user.color}40`,
-          }}
-        >
-          {user.initials}
-        </div>
-        {isDiagnosis && (
-          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg bg-sky-500 flex items-center justify-center shadow-md">
-            <svg viewBox="0 0 20 20" fill="none" stroke="white" strokeWidth="1.6" className="w-3 h-3">
-              <path d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437" />
-            </svg>
-          </div>
+      <div
+        className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform select-none"
+        style={{
+          background: `linear-gradient(135deg, ${user.color}, ${user.color}99)`,
+          boxShadow: `0 4px 20px ${user.color}40`,
+        }}
+      >
+        {isDiagnosis ? (
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.7" className="w-8 h-8">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+        ) : (
+          <span className="text-white font-bold text-xl">{user.initials}</span>
         )}
       </div>
       <span className="text-slate-500 text-xs text-center font-medium group-hover:text-slate-200 transition-colors leading-tight">

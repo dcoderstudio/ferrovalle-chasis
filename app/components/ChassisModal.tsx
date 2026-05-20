@@ -28,7 +28,6 @@ import {
   SERVICES,
   CATEGORIES,
   SIZE_MULTIPLIERS,
-  CONDITION_MULTIPLIERS,
   SIZE_LABELS,
   CONDITION_LABELS,
   type Service,
@@ -172,9 +171,8 @@ export default function ChassisModal({
   };
 
   const sizeMultiplier = SIZE_MULTIPLIERS[data.size] ?? 1;
-  const conditionMultiplier = CONDITION_MULTIPLIERS[data.condition] ?? 1;
   const serviceUnitPrice = (svc: Service) =>
-    Math.round(svc.basePrice * (svc.affectedBySize ? sizeMultiplier : 1) * conditionMultiplier);
+    Math.round(svc.basePrice * (svc.affectedBySize ? sizeMultiplier : 1));
 
   const quotedTotal = data.selectedServices.reduce((sum, sel) => {
     const svc = SERVICES.find(s => s.id === sel.serviceId);
@@ -771,8 +769,6 @@ function DiagnosticoTab({
 }) {
   const [search, setSearch] = useState('');
   const sizeMultiplier = SIZE_MULTIPLIERS[data.size] ?? 1;
-  const conditionMultiplier = CONDITION_MULTIPLIERS[data.condition] ?? 1;
-  const combined = Math.round(sizeMultiplier * conditionMultiplier * 100) / 100;
 
   const q = search.toLowerCase();
   const filtered = q
@@ -866,23 +862,12 @@ function DiagnosticoTab({
           </Field>
         </div>
       )}
-      {/* Factor panel (admin only) */}
+      {/* Size indicator */}
       {!hidePrice && (
-      <div className="rounded-xl border border-white/[0.06] p-3" style={{ background: '#141b2d' }}>
-        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Factores de precio</p>
-        <div className="grid grid-cols-3 gap-2">
-          <MultiplierCard label="Tamaño" value={SIZE_LABELS[data.size] ?? data.size} multiplier={`×${sizeMultiplier}`} />
-          <MultiplierCard label="Condición" value={CONDITION_LABELS[data.condition]?.split(' ')[0] ?? data.condition} multiplier={`×${conditionMultiplier}`} />
-          <div className="rounded-xl p-2.5 border border-orange-400/20 text-center" style={{ background: 'rgba(249,115,22,0.08)' }}>
-            <p className="text-[10px] text-orange-400/70 mb-0.5">Factor total</p>
-            <p className="font-bold text-orange-300 text-xl">×{combined}</p>
-          </div>
+        <div className="flex items-center gap-2 text-[11px] text-slate-500 px-1">
+          <span className="text-blue-400 font-semibold">●</span> ×Tamaño: el precio varía según 20 ft / 40 ft (×{sizeMultiplier}) &nbsp;·&nbsp;
+          <span className="text-slate-600 font-semibold">●</span> Precio fijo: independiente del tamaño
         </div>
-        <p className="text-[10px] text-slate-600 mt-2">
-          <span className="text-blue-400 font-semibold">●</span> ×Tamaño: el precio varía según 20 ft / 40 ft &nbsp;·&nbsp;
-          <span className="text-slate-500 font-semibold">●</span> Precio fijo: el mismo independiente del tamaño
-        </p>
-      </div>
       )}
 
       {/* Search */}
