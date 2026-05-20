@@ -853,13 +853,22 @@ function DiagnosticoTab({
               />
             </Field>
           </div>
-          <Field label="Condición del chasis">
-            <PillGrid
-              value={data.condition}
-              onChange={v => onUpdate({ condition: v as ChassisCondition })}
-              options={CONDITION_OPTIONS}
-            />
-          </Field>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label="Tamaño del chasis">
+              <PillGrid
+                value={data.size}
+                onChange={v => onUpdate({ size: v as ChassisSize })}
+                options={SIZE_OPTIONS}
+              />
+            </Field>
+            <Field label="Condición del chasis">
+              <PillGrid
+                value={data.condition}
+                onChange={v => onUpdate({ condition: v as ChassisCondition })}
+                options={CONDITION_OPTIONS}
+              />
+            </Field>
+          </div>
         </div>
       )}
       {/* Size indicator */}
