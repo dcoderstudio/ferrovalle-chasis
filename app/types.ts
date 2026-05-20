@@ -31,4 +31,9 @@ export type Chassis = {
   finalPrice: number | null;
   notes: string;
   createdAt: string;
+  requestedBy: string;
+  pdfPurchaseOrder: string;
+  pdfPurchaseOrderName: string;
+  pdfQuotation: string;
+  pdfQuotationName: string;
 };

@@ -13,17 +13,15 @@ import {
 import { PillGrid, DatePicker, type PillOption } from './FormControls';
 
 const SIZE_OPTIONS: PillOption[] = [
-  { value: 'pequeño', label: '20 ft', sublabel: 'Chasis estándar' },
-  { value: 'mediano', label: 'Mediano', sublabel: '6–10m' },
-  { value: 'grande', label: '40 ft', sublabel: 'Chasis extendido' },
-  { value: 'extra-grande', label: 'Extra Grande', sublabel: '> 15m' },
+  { value: 'pequeño', label: '20 ft' },
+  { value: 'grande', label: '40 ft' },
 ];
 
 const CONDITION_OPTIONS: PillOption[] = [
-  { value: 'bueno', label: 'Buenas condiciones', sublabel: 'Factor ×1.0' },
-  { value: 'moderado', label: 'Desgaste moderado', sublabel: 'Factor ×1.3' },
-  { value: 'severo', label: 'Deterioro severo', sublabel: 'Factor ×1.7' },
-  { value: 'critico', label: 'Estado crítico', sublabel: 'Factor ×2.2' },
+  { value: 'bueno', label: 'Buenas condiciones' },
+  { value: 'moderado', label: 'Desgaste moderado' },
+  { value: 'severo', label: 'Deterioro severo' },
+  { value: 'critico', label: 'Estado crítico' },
 ];
 
 type Tab = 'info' | 'fotos' | 'diagnostico' | 'cotizacion';
@@ -492,14 +490,121 @@ function InfoTab({ data, update }: { data: Chassis; update: (f: Partial<Chassis>
         <Field label="Notas y Observaciones">
           <textarea
             className={`${inp} resize-none`}
-            rows={4}
+            rows={3}
             value={data.notes}
             onChange={e => update({ notes: e.target.value })}
             placeholder="Detalles del estado, observaciones, instrucciones especiales..."
           />
         </Field>
       </div>
+
+      {/* Separador documentos */}
+      <div className="sm:col-span-2 pt-1">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Documentos y responsable</p>
+        <div className="mt-3 h-px bg-white/[0.06]" />
+      </div>
+
+      <div className="sm:col-span-2">
+        <Field label="Solicitado / Autorizado por">
+          <input
+            className={inp}
+            value={data.requestedBy ?? ''}
+            onChange={e => update({ requestedBy: e.target.value })}
+            placeholder="Nombre del responsable o solicitante"
+          />
+        </Field>
+      </div>
+
+      <div>
+        <Field label="PDF Orden de Compra">
+          <PdfUpload
+            dataUrl={data.pdfPurchaseOrder ?? ''}
+            name={data.pdfPurchaseOrderName ?? ''}
+            onUpload={(url, name) => update({ pdfPurchaseOrder: url, pdfPurchaseOrderName: name })}
+            onRemove={() => update({ pdfPurchaseOrder: '', pdfPurchaseOrderName: '' })}
+          />
+        </Field>
+      </div>
+
+      <div>
+        <Field label="PDF Cotización Final">
+          <PdfUpload
+            dataUrl={data.pdfQuotation ?? ''}
+            name={data.pdfQuotationName ?? ''}
+            onUpload={(url, name) => update({ pdfQuotation: url, pdfQuotationName: name })}
+            onRemove={() => update({ pdfQuotation: '', pdfQuotationName: '' })}
+          />
+        </Field>
+      </div>
     </div>
+  );
+}
+
+// ─── PDF Upload helper ────────────────────────────────────────────────────────
+
+function PdfUpload({
+  dataUrl,
+  name,
+  onUpload,
+  onRemove,
+}: {
+  dataUrl: string;
+  name: string;
+  onUpload: (url: string, name: string) => void;
+  onRemove: () => void;
+}) {
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => onUpload(reader.result as string, file.name);
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  if (dataUrl) {
+    return (
+      <div className="flex items-center gap-3 bg-[#1a2235] border border-white/[0.08] rounded-xl p-3">
+        <div className="w-8 h-8 bg-red-500/15 rounded-lg flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-red-400">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </div>
+        <p className="flex-1 text-white text-xs font-medium truncate min-w-0">{name}</p>
+        <a
+          href={dataUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-blue-400 hover:text-blue-300 font-medium shrink-0 transition-colors"
+        >
+          Ver
+        </a>
+        <button
+          onClick={onRemove}
+          className="text-slate-600 hover:text-red-400 text-xs shrink-0 transition-colors"
+        >
+          ✕
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <label className="flex items-center gap-3 bg-[#1a2235] border border-dashed border-white/[0.08] hover:border-white/20 rounded-xl p-3 cursor-pointer transition-all">
+      <div className="w-8 h-8 bg-white/[0.04] rounded-lg flex items-center justify-center shrink-0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-slate-600">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <div>
+        <p className="text-xs text-slate-500 font-medium">Subir archivo PDF</p>
+        <p className="text-[10px] text-slate-700 mt-0.5">Máx 10 MB</p>
+      </div>
+      <input type="file" accept="application/pdf,.pdf" className="hidden" onChange={handleFile} />
+    </label>
   );
 }
 

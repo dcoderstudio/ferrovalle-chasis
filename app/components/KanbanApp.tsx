@@ -13,10 +13,10 @@ const SIZE_OPTIONS: PillOption[] = [
 ];
 
 const CONDITION_OPTIONS: PillOption[] = [
-  { value: 'bueno', label: 'Buenas condiciones', sublabel: 'Factor ×1.0' },
-  { value: 'moderado', label: 'Desgaste moderado', sublabel: 'Factor ×1.3' },
-  { value: 'severo', label: 'Deterioro severo', sublabel: 'Factor ×1.7' },
-  { value: 'critico', label: 'Estado crítico', sublabel: 'Factor ×2.2' },
+  { value: 'bueno', label: 'Buenas condiciones' },
+  { value: 'moderado', label: 'Desgaste moderado' },
+  { value: 'severo', label: 'Deterioro severo' },
+  { value: 'critico', label: 'Estado crítico' },
 ];
 
 type ColumnConfig = {
@@ -368,9 +368,6 @@ function ChassisCard({
             <p className="font-bold text-white text-sm leading-tight">
               #{chassis.chassisNumber || '—'}
             </p>
-            {chassis.clientName && (
-              <p className="text-slate-500 text-xs mt-0.5 truncate">{chassis.clientName}</p>
-            )}
           </div>
           {chassis.purchaseOrder && (
             <span className="text-xs bg-white/[0.06] text-slate-500 px-1.5 py-0.5 rounded-md font-mono shrink-0 max-w-[80px] truncate">
@@ -437,9 +434,8 @@ function AddChassisModal({
     e.target.value = '';
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chassisNumber.trim()) return;
+  const save = () => {
+    if (!chassisNumber.trim()) return false;
     onAdd({
       chassisNumber,
       size,
@@ -455,29 +451,37 @@ function AddChassisModal({
       finalPrice: null,
       commitmentDate: '',
       deliveryDate: '',
+      requestedBy: '',
+      pdfPurchaseOrder: '',
+      pdfPurchaseOrderName: '',
+      pdfQuotation: '',
+      pdfQuotationName: '',
     });
+    return true;
   };
+
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); save(); };
+  const handleBackdrop = () => { if (!save()) onClose(); };
 
   return (
     <div
       className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={handleBackdrop}
     >
       <div
-        className="rounded-2xl shadow-2xl w-full max-w-md border border-white/[0.08] overflow-hidden"
+        className="rounded-2xl shadow-2xl w-full max-w-sm border border-white/[0.08] overflow-hidden"
         style={{ background: '#0e1420' }}
         onClick={e => e.stopPropagation()}
       >
         <div
-          className="px-6 py-5 border-b border-white/[0.06]"
+          className="px-5 py-4 border-b border-white/[0.06]"
           style={{ background: 'linear-gradient(135deg, #1e0a3c 0%, #0c1e4a 100%)' }}
         >
-          <h2 className="text-white font-bold text-lg tracking-tight">Registrar nuevo chasis</h2>
+          <h2 className="text-white font-bold text-base tracking-tight">Registrar nuevo chasis</h2>
           <p className="text-purple-300/50 text-xs mt-0.5">Información inicial del chasis</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Número */}
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
             <Label text="Número de Chasis" required />
             <input
@@ -490,43 +494,31 @@ function AddChassisModal({
             />
           </div>
 
-          {/* Tamaño */}
           <div>
             <Label text="Tamaño" />
-            <PillGrid
-              value={size}
-              onChange={v => setSize(v as ChassisSize)}
-              options={SIZE_OPTIONS}
-            />
+            <PillGrid value={size} onChange={v => setSize(v as ChassisSize)} options={SIZE_OPTIONS} />
           </div>
 
-          {/* Condición */}
           <div>
             <Label text="Condición general" />
-            <PillGrid
-              value={condition}
-              onChange={v => setCondition(v as ChassisCondition)}
-              options={CONDITION_OPTIONS}
-            />
+            <PillGrid value={condition} onChange={v => setCondition(v as ChassisCondition)} options={CONDITION_OPTIONS} />
           </div>
 
-          {/* Notas */}
           <div>
             <Label text="Notas" />
             <textarea
               className={`${inp} resize-none`}
-              rows={2}
+              rows={1}
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="Observaciones iniciales..."
             />
           </div>
 
-          {/* Foto del antes */}
           <div>
             <Label text="Foto del antes" />
             {photoBefore ? (
-              <div className="relative group rounded-xl overflow-hidden border border-white/[0.08] aspect-video">
+              <div className="relative group rounded-xl overflow-hidden border border-white/[0.08]" style={{ aspectRatio: '16/7' }}>
                 <img src={photoBefore} alt="Foto antes" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center">
                   <button
@@ -539,21 +531,21 @@ function AddChassisModal({
                 </div>
               </div>
             ) : (
-              <label
-                className="flex flex-col items-center justify-center border-2 border-dashed border-cyan-400/25 rounded-xl py-8 cursor-pointer hover:border-cyan-400/50 hover:bg-cyan-400/[0.03] transition-all"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-cyan-400/40 mb-2">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                  <circle cx="12" cy="13" r="4" />
+              <label className="flex items-center gap-3 border border-dashed border-cyan-400/25 rounded-xl p-3 cursor-pointer hover:border-cyan-400/40 hover:bg-cyan-400/[0.03] transition-all">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 text-cyan-400/40 shrink-0">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
                 </svg>
-                <p className="text-sm text-slate-500">Click para subir foto del antes</p>
-                <p className="text-xs text-slate-700 mt-0.5">JPG, PNG</p>
+                <div>
+                  <p className="text-xs text-slate-500 font-medium">Click para subir foto del antes</p>
+                  <p className="text-[10px] text-slate-700 mt-0.5">JPG, PNG</p>
+                </div>
                 <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
               </label>
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-2 border-t border-white/[0.06]">
+          <div className="flex justify-end gap-3 pt-3 border-t border-white/[0.06]">
             <button
               type="button"
               onClick={onClose}
@@ -563,10 +555,10 @@ function AddChassisModal({
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 text-white text-sm font-semibold rounded-xl transition-all hover:opacity-90 active:scale-95"
+              className="px-5 py-2 text-white text-sm font-semibold rounded-xl transition-all hover:opacity-90 active:scale-95"
               style={{ background: 'linear-gradient(135deg, #f97316, #c2410c)' }}
             >
-              Registrar Chasis
+              Guardar y cerrar
             </button>
           </div>
         </form>
