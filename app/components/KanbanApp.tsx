@@ -223,20 +223,22 @@ export default function KanbanApp() {
             <Stat dot="bg-slate-500" label="total" value={chassisList.length} valueColor="text-white" />
             <Stat dot="bg-orange-400" label="activos" value={active} valueColor="text-orange-300" />
             <Stat dot="bg-emerald-400" label="entregados" value={delivered} valueColor="text-emerald-300" />
-            <span className={`flex items-center gap-1.5 text-xs ${
-              syncStatus === 'synced' ? 'text-emerald-400' :
-              syncStatus === 'syncing' ? 'text-blue-400' :
-              syncStatus === 'error' ? 'text-red-400' : 'text-slate-600'
-            }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${
-                syncStatus === 'synced' ? 'bg-emerald-400' :
-                syncStatus === 'syncing' ? 'bg-blue-400 animate-pulse' :
-                syncStatus === 'error' ? 'bg-red-400' : 'bg-slate-600'
-              }`} />
-              {syncStatus === 'synced' ? 'Sincronizado' :
-               syncStatus === 'syncing' ? 'Guardando...' :
-               syncStatus === 'error' ? 'Error de sync' : 'Solo local'}
-            </span>
+            {syncStatus !== 'local' && (
+              <span className={`flex items-center gap-1.5 text-xs ${
+                syncStatus === 'synced' ? 'text-emerald-400' :
+                syncStatus === 'syncing' ? 'text-blue-300' :
+                'text-red-400'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  syncStatus === 'synced' ? 'bg-emerald-400' :
+                  syncStatus === 'syncing' ? 'bg-blue-400 animate-pulse' :
+                  'bg-red-400'
+                }`} />
+                {syncStatus === 'synced' ? 'Guardado ✓' :
+                 syncStatus === 'syncing' ? 'Guardando...' :
+                 'No se pudo guardar'}
+              </span>
+            )}
           </div>
           <button
             onClick={() => setShowAddModal(true)}
