@@ -39,6 +39,12 @@ const SIZE_OPTIONS: PillOption[] = [
   { value: 'grande', label: '40 ft' },
 ];
 
+const PATIO_OPTIONS: PillOption[] = [
+  { value: 'fiscal',        label: 'Fiscal' },
+  { value: 'desaduanizado', label: 'Desaduanizado' },
+  { value: 'fi',            label: 'FI' },
+];
+
 const CONDITION_OPTIONS: PillOption[] = [
   { value: 'bueno', label: 'Buenas condiciones' },
   { value: 'moderado', label: 'Desgaste moderado' },
@@ -494,6 +500,14 @@ function InfoTab({ data, update }: { data: Chassis; update: (f: Partial<Chassis>
           value={data.condition}
           onChange={v => update({ condition: v as ChassisCondition })}
           options={CONDITION_OPTIONS}
+        />
+      </Field>
+      <Field label="Patio">
+        <PillGrid
+          value={data.patio ?? ''}
+          onChange={v => update({ patio: v })}
+          options={PATIO_OPTIONS}
+          allowDeselect
         />
       </Field>
       <Field label="Fecha Compromiso de Entrega">

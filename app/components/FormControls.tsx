@@ -15,10 +15,12 @@ export function PillGrid({
   value,
   onChange,
   options,
+  allowDeselect = false,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: PillOption[];
+  allowDeselect?: boolean;
 }) {
   return (
     <div className="grid grid-cols-2 gap-2">
@@ -28,7 +30,7 @@ export function PillGrid({
           <button
             key={opt.value}
             type="button"
-            onClick={() => onChange(opt.value)}
+            onClick={() => onChange(allowDeselect && sel ? '' : opt.value)}
             className={`px-3 py-2.5 rounded-xl border transition-all text-left ${
               sel
                 ? 'border-violet-400/40 text-violet-200'

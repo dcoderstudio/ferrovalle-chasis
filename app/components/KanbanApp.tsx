@@ -35,6 +35,12 @@ const SIZE_OPTIONS: PillOption[] = [
   { value: 'grande', label: '40 ft', sublabel: 'Chasis extendido' },
 ];
 
+const PATIO_OPTIONS: PillOption[] = [
+  { value: 'fiscal',        label: 'Fiscal' },
+  { value: 'desaduanizado', label: 'Desaduanizado' },
+  { value: 'fi',            label: 'FI' },
+];
+
 const CONDITION_OPTIONS: PillOption[] = [
   { value: 'bueno', label: 'Buenas condiciones' },
   { value: 'moderado', label: 'Desgaste moderado' },
@@ -649,6 +655,7 @@ function AddChassisModal({
   const [chassisNumber, setChassisNumber] = useState('');
   const [size, setSize] = useState<ChassisSize>('pequeño');
   const [condition, setCondition] = useState<ChassisCondition>('moderado');
+  const [patio, setPatio] = useState('');
   const [notes, setNotes] = useState('');
   const [photoBefore, setPhotoBefore] = useState<string>('');
 
@@ -665,6 +672,7 @@ function AddChassisModal({
       chassisNumber,
       size,
       condition,
+      patio,
       notes,
       status: 'recibido',
       clientName: '',
@@ -729,6 +737,11 @@ function AddChassisModal({
           <div>
             <Label text="Condición general" />
             <PillGrid value={condition} onChange={v => setCondition(v as ChassisCondition)} options={CONDITION_OPTIONS} />
+          </div>
+
+          <div>
+            <Label text="Patio" />
+            <PillGrid value={patio} onChange={setPatio} options={PATIO_OPTIONS} allowDeselect />
           </div>
 
           <div>
