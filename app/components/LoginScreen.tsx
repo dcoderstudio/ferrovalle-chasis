@@ -55,13 +55,12 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
       const json = await res.json();
 
       if (json.ok) {
-        const user = json.user ?? selected;
         setSession({
-          userId: user.id,
-          userName: user.name,
-          userColor: user.color,
-          userInitials: user.initials,
-          userRole: user.role ?? 'admin',
+          userId: selected.id,
+          userName: selected.name,
+          userColor: selected.color,
+          userInitials: selected.initials,
+          userRole: selected.role,
         });
         onLogin();
       } else {

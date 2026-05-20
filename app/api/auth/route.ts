@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await db
     .from('users')
-    .select('id, name, initials, color, role')
+    .select('id, name, initials, color')
     .eq('id', userId)
     .eq('password_hash', passwordHash);
 
