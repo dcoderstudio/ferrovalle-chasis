@@ -17,13 +17,12 @@ export async function GET() {
   const { data, error } = await db
     .from('app_data')
     .select('value')
-    .eq('key', 'chassis')
-    .single();
+    .eq('key', 'chassis');
 
   if (error) {
     return NextResponse.json({ error: error.message, code: error.code }, { status: 500 });
   }
-  return NextResponse.json(data?.value ?? []);
+  return NextResponse.json(data && data.length > 0 ? data[0].value : []);
 }
 
 export async function POST(request: Request) {
