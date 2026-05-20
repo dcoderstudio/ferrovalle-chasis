@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { hashPassword, setSession } from '../lib/auth';
 
@@ -12,11 +12,6 @@ type DisplayUser = {
   role: 'admin' | 'diagnostico';
 };
 
-type ApiUser = DisplayUser & { password_hash: string };
-
-const CACHE_KEY = 'ferrovalle-users-v2';
-
-// Hardcoded for instant display — only visual, auth uses real DB data
 const DISPLAY_USERS: DisplayUser[] = [
   { id: 'sergio-barrera',   name: 'Sergio Barrera',        initials: 'SB', color: '#3b82f6', role: 'admin' },
   { id: 'yesenia-acevedo',  name: 'Yesenia Acevedo',       initials: 'YA', color: '#ec4899', role: 'admin' },
@@ -35,30 +30,6 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  // Real user data (with hashes) loaded in background
-  const apiUsersRef = useRef<ApiUser[]>([]);
-
-  useEffect(() => {
-    // Load from cache immediately so first login attempt is instant
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) apiUsersRef.current = parsed;
-      }
-    } catch {}
-
-    // Refresh from API in background
-    fetch('/api/users')
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          apiUsersRef.current = data;
-          try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   const handleSelect = (user: DisplayUser) => {
     setSelected(user);
@@ -72,39 +43,41 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
     setLoading(true);
     setError('');
 
-    // Match by name (robust against ID format differences in DB)
-    let apiUser = apiUsersRef.current.find(u => u.name === selected.name);
-
-    // If not in cache yet, fetch now (user just typed their password so small wait is ok)
-    if (!apiUser) {
-      try {
-        const data = await fetch('/api/users').then(r => r.json());
-        if (Array.isArray(data) && data.length > 0) {
-          apiUsersRef.current = data;
-          try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
-          apiUser = data.find((u: ApiUser) => u.name === selected.name);
-        }
-      } catch {}
-    }
-
-    if (!apiUser) {
-      setError('No se pudo conectar al servidor. Intenta de nuevo.');
-      setLoading(false);
-      return;
-    }
-
-    const hash = await hashPassword(password);
-    if (hash === apiUser.password_hash) {
-      setSession({
-        userId: apiUser.id,
-        userName: apiUser.name,
-        userColor: apiUser.color,
-        userInitials: apiUser.initials,
-        userRole: (apiUser.role as 'admin' | 'diagnostico') ?? 'admin',
+    try {
+      const passwordHash = await hashPassword(password);
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: selected.id,
+          userName: selected.name,
+          passwordHash,
+        }),
       });
-      onLogin();
-    } else {
-      setError('Contraseña incorrecta');
+
+      const json = await res.json();
+
+      if (json.ok) {
+        setSession({
+          userId: json.user?.id ?? selected.id,
+          userName: json.user?.name ?? selected.name,
+          userColor: json.user?.color ?? selected.color,
+          userInitials: json.user?.initials ?? selected.initials,
+          userRole: selected.role,
+        });
+        onLogin();
+      } else {
+        const msgs: Record<string, string> = {
+          wrong_password:  'Contraseña incorrecta',
+          user_not_found:  'Usuario no encontrado. Ejecuta /api/setup primero.',
+          not_configured:  'Error de servidor: variables de entorno no configuradas.',
+          db_error:        `Error de base de datos: ${json.detail ?? ''}`,
+        };
+        setError(msgs[json.reason] ?? `Error: ${json.reason ?? 'desconocido'}`);
+        setLoading(false);
+      }
+    } catch (err) {
+      setError(`Sin conexión al servidor. (${err instanceof Error ? err.message : 'network error'})`);
       setLoading(false);
     }
   };
@@ -153,7 +126,6 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
         ))}
       </div>
 
-      {/* Password modal */}
       {selected && (
         <div
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"

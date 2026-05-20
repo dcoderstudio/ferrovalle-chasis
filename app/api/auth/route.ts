@@ -12,24 +12,33 @@ export async function POST(request: Request) {
   const db = getDb();
   if (!db) return NextResponse.json({ ok: false, reason: 'not_configured' }, { status: 503 });
 
-  const { userId, passwordHash } = await request.json();
-  if (!userId || !passwordHash) return NextResponse.json({ ok: false, reason: 'missing_fields' });
+  const { userId, userName, passwordHash } = await request.json();
+  if (!passwordHash) return NextResponse.json({ ok: false, reason: 'missing_fields' });
 
-  // Fetch user by ID only, compare hash in JS (avoids DB collation issues)
-  const { data, error } = await db
-    .from('users')
-    .select('id, name, initials, color, password_hash')
-    .eq('id', userId);
+  // Try by ID first, then fall back to name lookup
+  let rows: { id: string; name: string; initials: string; color: string; password_hash: string }[] = [];
 
-  if (error) {
-    return NextResponse.json({ ok: false, reason: 'db_error', detail: error.message }, { status: 500 });
+  if (userId) {
+    const { data } = await db
+      .from('users')
+      .select('id, name, initials, color, password_hash')
+      .eq('id', userId);
+    if (data && data.length > 0) rows = data;
   }
 
-  if (!data || data.length === 0) {
+  if (rows.length === 0 && userName) {
+    const { data } = await db
+      .from('users')
+      .select('id, name, initials, color, password_hash')
+      .eq('name', userName);
+    if (data && data.length > 0) rows = data;
+  }
+
+  if (rows.length === 0) {
     return NextResponse.json({ ok: false, reason: 'user_not_found' });
   }
 
-  const user = data[0];
+  const user = rows[0];
   if (user.password_hash !== passwordHash) {
     return NextResponse.json({ ok: false, reason: 'wrong_password' });
   }
@@ -37,7 +46,6 @@ export async function POST(request: Request) {
   return NextResponse.json({ ok: true, user: { id: user.id, name: user.name, initials: user.initials, color: user.color } });
 }
 
-// GET for connectivity test
 export async function GET() {
   const db = getDb();
   if (!db) return NextResponse.json({ status: 'not_configured' });
