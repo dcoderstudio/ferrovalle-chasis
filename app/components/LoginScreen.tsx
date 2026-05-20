@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { hashPassword, setSession } from '../lib/auth';
 
@@ -12,18 +12,22 @@ type DisplayUser = {
   role: 'admin' | 'diagnostico';
 };
 
-// Perfiles estáticos — se muestran de inmediato sin necesidad de red
-const USERS: DisplayUser[] = [
-  { id: 'sergio-barrera',    name: 'Sergio Barrera',         initials: 'SB', color: '#3b82f6', role: 'admin' },
-  { id: 'yesenia-acevedo',   name: 'Yesenia Acevedo',        initials: 'YA', color: '#ec4899', role: 'admin' },
-  { id: 'edgar-agreda',      name: 'Edgar Agreda',           initials: 'EA', color: '#f97316', role: 'admin' },
-  { id: 'victor-juarez',     name: 'Victor Juarez',          initials: 'VJ', color: '#8b5cf6', role: 'admin' },
-  { id: 'monica-romero',     name: 'Mónica Romero',          initials: 'MR', color: '#06b6d4', role: 'admin' },
-  { id: 'leonardo-morales',  name: 'Leonardo Morales',       initials: 'LM', color: '#22c55e', role: 'admin' },
-  { id: 'grupo-civaz',       name: 'Grupo Civaz',            initials: 'GC', color: '#f59e0b', role: 'admin' },
-  { id: 'tecnico-diag-1',    name: 'Técnico Diagnóstico 1',  initials: 'T1', color: '#0ea5e9', role: 'diagnostico' },
-  { id: 'tecnico-diag-2',    name: 'Técnico Diagnóstico 2',  initials: 'T2', color: '#0ea5e9', role: 'diagnostico' },
-  { id: 'tecnico-diag-3',    name: 'Técnico Diagnóstico 3',  initials: 'T3', color: '#0ea5e9', role: 'diagnostico' },
+type ApiUser = DisplayUser & { password_hash: string };
+
+const CACHE_KEY = 'ferrovalle-users-v2';
+
+// Hardcoded for instant display — only visual, auth uses real DB data
+const DISPLAY_USERS: DisplayUser[] = [
+  { id: 'sergio-barrera',   name: 'Sergio Barrera',        initials: 'SB', color: '#3b82f6', role: 'admin' },
+  { id: 'yesenia-acevedo',  name: 'Yesenia Acevedo',       initials: 'YA', color: '#ec4899', role: 'admin' },
+  { id: 'edgar-agreda',     name: 'Edgar Agreda',          initials: 'EA', color: '#f97316', role: 'admin' },
+  { id: 'victor-juarez',    name: 'Victor Juarez',         initials: 'VJ', color: '#8b5cf6', role: 'admin' },
+  { id: 'monica-romero',    name: 'Mónica Romero',         initials: 'MR', color: '#06b6d4', role: 'admin' },
+  { id: 'leonardo-morales', name: 'Leonardo Morales',      initials: 'LM', color: '#22c55e', role: 'admin' },
+  { id: 'grupo-civaz',      name: 'Grupo Civaz',           initials: 'GC', color: '#f59e0b', role: 'admin' },
+  { id: 'tecnico-diag-1',   name: 'Técnico Diagnóstico 1', initials: 'T1', color: '#0ea5e9', role: 'diagnostico' },
+  { id: 'tecnico-diag-2',   name: 'Técnico Diagnóstico 2', initials: 'T2', color: '#0ea5e9', role: 'diagnostico' },
+  { id: 'tecnico-diag-3',   name: 'Técnico Diagnóstico 3', initials: 'T3', color: '#0ea5e9', role: 'diagnostico' },
 ];
 
 export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
@@ -31,6 +35,30 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  // Real user data (with hashes) loaded in background
+  const apiUsersRef = useRef<ApiUser[]>([]);
+
+  useEffect(() => {
+    // Load from cache immediately so first login attempt is instant
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) apiUsersRef.current = parsed;
+      }
+    } catch {}
+
+    // Refresh from API in background
+    fetch('/api/users')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          apiUsersRef.current = data;
+          try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSelect = (user: DisplayUser) => {
     setSelected(user);
@@ -44,38 +72,39 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
     setLoading(true);
     setError('');
 
-    const passwordHash = await hashPassword(password);
+    // Match by name (robust against ID format differences in DB)
+    let apiUser = apiUsersRef.current.find(u => u.name === selected.name);
 
-    try {
-      const res = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: selected.id, passwordHash }),
+    // If not in cache yet, fetch now (user just typed their password so small wait is ok)
+    if (!apiUser) {
+      try {
+        const data = await fetch('/api/users').then(r => r.json());
+        if (Array.isArray(data) && data.length > 0) {
+          apiUsersRef.current = data;
+          try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
+          apiUser = data.find((u: ApiUser) => u.name === selected.name);
+        }
+      } catch {}
+    }
+
+    if (!apiUser) {
+      setError('No se pudo conectar al servidor. Intenta de nuevo.');
+      setLoading(false);
+      return;
+    }
+
+    const hash = await hashPassword(password);
+    if (hash === apiUser.password_hash) {
+      setSession({
+        userId: apiUser.id,
+        userName: apiUser.name,
+        userColor: apiUser.color,
+        userInitials: apiUser.initials,
+        userRole: (apiUser.role as 'admin' | 'diagnostico') ?? 'admin',
       });
-      const json = await res.json();
-
-      if (json.ok) {
-        setSession({
-          userId: selected.id,
-          userName: selected.name,
-          userColor: selected.color,
-          userInitials: selected.initials,
-          userRole: selected.role,
-        });
-        onLogin();
-      } else {
-        const msg: Record<string, string> = {
-          wrong_password: 'Contraseña incorrecta',
-          user_not_found: 'Usuario no encontrado en la base de datos',
-          not_configured: 'Error de servidor: no configurado',
-          db_error: `Error de base de datos: ${json.detail ?? ''}`,
-          missing_fields: 'Error interno: faltan campos',
-        };
-        setError(msg[json.reason] ?? `Error desconocido (${json.reason})`);
-        setLoading(false);
-      }
-    } catch {
-      setError('Sin conexión. Verifica tu internet e intenta de nuevo.');
+      onLogin();
+    } else {
+      setError('Contraseña incorrecta');
       setLoading(false);
     }
   };
@@ -102,7 +131,7 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
       </h2>
 
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-5 max-w-2xl w-full">
-        {USERS.map(user => (
+        {DISPLAY_USERS.map(user => (
           <button
             key={user.id}
             onClick={() => handleSelect(user)}
