@@ -555,6 +555,7 @@ function AddChassisModal({
       pdfPurchaseOrderName: '',
       pdfQuotation: '',
       pdfQuotationName: '',
+      completedServices: [],
     });
     return true;
   };

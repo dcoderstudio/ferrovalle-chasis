@@ -26,7 +26,7 @@ const CONDITION_OPTIONS: PillOption[] = [
   { value: 'critico', label: 'Estado crítico' },
 ];
 
-type Tab = 'info' | 'fotos' | 'diagnostico' | 'cotizacion';
+type Tab = 'info' | 'fotos' | 'avance' | 'diagnostico' | 'cotizacion';
 
 const STATUS_OPTIONS: Array<{
   id: ChassisStatus;
@@ -162,6 +162,7 @@ export default function ChassisModal({
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: 'info', label: 'Información' },
     { id: 'fotos', label: 'Fotos' },
+    { id: 'avance', label: 'Avance' },
     { id: 'diagnostico', label: 'Diagnóstico' },
     { id: 'cotizacion', label: 'Cotización' },
   ];
@@ -329,20 +330,8 @@ export default function ChassisModal({
           </div>
         </div>
 
-        {/* Status selector */}
-        <div className="flex gap-2 px-6 py-3 border-b border-white/[0.06] overflow-x-auto shrink-0 bg-[#0a0f1a]">
-          {STATUS_OPTIONS.map(opt => (
-            <button
-              key={opt.id}
-              onClick={() => update({ status: opt.id })}
-              className={`px-3 py-1 rounded-full text-xs border whitespace-nowrap transition-all ${
-                data.status === opt.id ? opt.active : `bg-transparent ${opt.inactive}`
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+        {/* Status stepper (read-only) */}
+        <StatusStepper status={data.status} />
 
         {/* Tabs */}
         <div className="flex border-b border-white/[0.06] px-6 shrink-0 bg-[#0a0f1a]">
@@ -369,6 +358,9 @@ export default function ChassisModal({
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6">
           {activeTab === 'info' && <InfoTab data={data} update={update} />}
+          {activeTab === 'avance' && (
+            <AvanceTab data={data} update={update} />
+          )}
           {activeTab === 'fotos' && (
             <FotosTab data={data} onPhotoUpload={handlePhotoUpload} onRemovePhoto={removePhoto} />
           )}
@@ -431,14 +423,6 @@ function InfoTab({ data, update }: { data: Chassis; update: (f: Partial<Chassis>
           value={data.chassisNumber}
           onChange={e => update({ chassisNumber: e.target.value })}
           placeholder="ej. CH-2024-001"
-        />
-      </Field>
-      <Field label="Cliente">
-        <input
-          className={inp}
-          value={data.clientName}
-          onChange={e => update({ clientName: e.target.value })}
-          placeholder="Nombre del cliente"
         />
       </Field>
       <Field label="Orden de Compra">
@@ -968,6 +952,182 @@ function CotizacionTab({
             <p className="text-2xl font-bold text-emerald-400">{formatCurrency(data.finalPrice)}</p>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Status Stepper ───────────────────────────────────────────────────────────
+
+const STEPS: Array<{ id: ChassisStatus; label: string; color: string }> = [
+  { id: 'recibido',      label: 'Recibido',     color: '#22d3ee' },
+  { id: 'diagnostico',   label: 'Diagnóstico',  color: '#60a5fa' },
+  { id: 'en-reparacion', label: 'Reparación',   color: '#fb923c' },
+  { id: 'acabados',      label: 'Acabados',     color: '#c084fc' },
+  { id: 'inspeccion',    label: 'Insp. Final',  color: '#f472b6' },
+  { id: 'entregado',     label: 'Entregado',    color: '#4ade80' },
+];
+
+function StatusStepper({ status }: { status: ChassisStatus }) {
+  const currentIdx = STEPS.findIndex(s => s.id === status);
+  return (
+    <div className="flex items-start px-6 py-3 border-b border-white/[0.06] bg-[#0a0f1a] overflow-x-auto shrink-0 gap-0">
+      {STEPS.map((step, i) => {
+        const isPast = i < currentIdx;
+        const isCurrent = i === currentIdx;
+        return (
+          <div key={step.id} className="flex items-center flex-1 min-w-0">
+            <div className="flex flex-col items-center gap-1 shrink-0">
+              <div
+                className="rounded-full transition-all flex items-center justify-center"
+                style={{
+                  width: isCurrent ? 20 : 12,
+                  height: isCurrent ? 20 : 12,
+                  background: isCurrent ? step.color : isPast ? step.color + '70' : 'rgba(255,255,255,0.08)',
+                  boxShadow: isCurrent ? `0 0 12px ${step.color}60` : undefined,
+                }}
+              >
+                {isPast && (
+                  <svg viewBox="0 0 8 8" fill="none" stroke="white" strokeWidth="2" style={{ width: 7, height: 7 }}>
+                    <polyline points="1 4 3.5 6.5 7 1.5" />
+                  </svg>
+                )}
+              </div>
+              <span style={{
+                fontSize: 9,
+                fontWeight: isCurrent ? 700 : 400,
+                color: isCurrent ? 'white' : isPast ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)',
+                whiteSpace: 'nowrap',
+              }}>
+                {step.label}
+              </span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div className="flex-1 h-px mx-1 mb-3" style={{
+                background: i < currentIdx ? STEPS[i].color + '50' : 'rgba(255,255,255,0.06)',
+              }} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Avance Tab ───────────────────────────────────────────────────────────────
+
+function AvanceTab({ data, update }: { data: Chassis; update: (f: Partial<Chassis>) => void }) {
+  const selected = data.selectedServices;
+  const completed = data.completedServices ?? [];
+  const total = selected.length;
+  const done = selected.filter(s => completed.includes(s.serviceId)).length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+  const toggle = (serviceId: string) => {
+    const already = completed.includes(serviceId);
+    update({
+      completedServices: already
+        ? completed.filter(id => id !== serviceId)
+        : [...completed, serviceId],
+    });
+  };
+
+  if (total === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-4">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6 text-slate-600">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+          </svg>
+        </div>
+        <p className="text-slate-400 text-sm font-medium">Sin servicios asignados</p>
+        <p className="text-slate-700 text-xs mt-1.5">Ve a <strong className="text-slate-500">Diagnóstico</strong> para seleccionar los servicios del chasis</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Progress circle */}
+      <div className="flex flex-col items-center pt-2 pb-2">
+        <ProgressCircle pct={pct} done={done} total={total} />
+        {pct === 100 && (
+          <p className="text-emerald-400 text-sm font-semibold mt-3">¡Todos los servicios completados!</p>
+        )}
+      </div>
+
+      {/* Service checklist */}
+      <div>
+        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3">
+          Servicios — toca para marcar como realizado
+        </p>
+        <div className="space-y-2">
+          {selected.map(sel => {
+            const svc = SERVICES.find(s => s.id === sel.serviceId);
+            if (!svc) return null;
+            const isDone = completed.includes(sel.serviceId);
+            return (
+              <button
+                key={sel.serviceId}
+                type="button"
+                onClick={() => toggle(sel.serviceId)}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                  isDone ? 'border-emerald-400/30' : 'border-white/[0.06] hover:border-white/[0.12]'
+                }`}
+                style={{ background: isDone ? 'rgba(74,222,128,0.06)' : '#141b2d' }}
+              >
+                <div
+                  className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-all"
+                  style={{
+                    background: isDone ? '#4ade80' : 'rgba(255,255,255,0.07)',
+                    border: isDone ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                  }}
+                >
+                  {isDone && (
+                    <svg viewBox="0 0 10 10" fill="none" stroke="white" strokeWidth="2.5" className="w-3 h-3">
+                      <polyline points="1.5 5 4 7.5 8.5 2" />
+                    </svg>
+                  )}
+                </div>
+                <span
+                  className={`text-sm font-medium flex-1 transition-all ${
+                    isDone ? 'line-through opacity-50' : ''
+                  }`}
+                  style={{ color: isDone ? '#4ade80' : '#cbd5e1' }}
+                >
+                  {svc.name}
+                </span>
+                {sel.quantity > 1 && (
+                  <span className="text-xs text-slate-600 shrink-0">×{sel.quantity}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProgressCircle({ pct, done, total }: { pct: number; done: number; total: number }) {
+  const r = 52;
+  const circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+  const color = pct === 100 ? '#4ade80' : pct > 50 ? '#f97316' : '#60a5fa';
+  return (
+    <div className="relative w-36 h-36 flex items-center justify-center">
+      <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+        <circle cx="60" cy="60" r={r} fill="none" stroke={color}
+          strokeWidth="8" strokeLinecap="round"
+          strokeDasharray={`${dash} ${circ}`}
+          style={{ transition: 'stroke-dasharray 0.5s ease, stroke 0.3s ease' }}
+        />
+      </svg>
+      <div className="absolute flex flex-col items-center">
+        <span className="text-3xl font-bold text-white">{pct}%</span>
+        <span className="text-xs text-slate-500 mt-0.5">{done} de {total}</span>
       </div>
     </div>
   );
