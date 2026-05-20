@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import type { Chassis, ChassisStatus, ChassisSize, ChassisCondition } from '../types';
 import Image from 'next/image';
 import { SIZE_LABELS } from '../services-catalog';
-import { loadChassis, saveChassis } from '../lib/supabase';
+import { loadChassis, saveChassis, isConfigured } from '../lib/supabase';
 import ChassisModal from './ChassisModal';
 import { PillGrid, DatePicker, type PillOption } from './FormControls';
 
@@ -118,27 +118,40 @@ export default function KanbanApp() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<ChassisStatus | null>(null);
+  const [syncStatus, setSyncStatus] = useState<'local' | 'syncing' | 'synced' | 'error'>('local');
 
   useEffect(() => {
     const init = async () => {
-      // Try cloud first, fall back to localStorage
-      const cloud = await loadChassis();
-      if (cloud) {
-        setChassislist(cloud);
-        try { localStorage.setItem('ferrovalle-chassis', JSON.stringify(cloud)); } catch {}
+      if (!isConfigured()) {
+        setSyncStatus('local');
+        try {
+          const stored = localStorage.getItem('ferrovalle-chassis');
+          if (stored) setChassislist(JSON.parse(stored));
+        } catch {}
         return;
       }
-      try {
-        const stored = localStorage.getItem('ferrovalle-chassis');
-        if (stored) setChassislist(JSON.parse(stored));
-      } catch {}
+      setSyncStatus('syncing');
+      const cloud = await loadChassis();
+      if (cloud !== null) {
+        setChassislist(cloud);
+        try { localStorage.setItem('ferrovalle-chassis', JSON.stringify(cloud)); } catch {}
+        setSyncStatus('synced');
+      } else {
+        setSyncStatus('error');
+        try {
+          const stored = localStorage.getItem('ferrovalle-chassis');
+          if (stored) setChassislist(JSON.parse(stored));
+        } catch {}
+      }
     };
     init();
   }, []);
 
   useEffect(() => {
     try { localStorage.setItem('ferrovalle-chassis', JSON.stringify(chassisList)); } catch {}
-    saveChassis(chassisList).catch(() => {});
+    if (!isConfigured()) return;
+    setSyncStatus('syncing');
+    saveChassis(chassisList).then(ok => setSyncStatus(ok ? 'synced' : 'error'));
   }, [chassisList]);
 
   const handleAddChassis = (data: Omit<Chassis, 'id' | 'createdAt'>) => {
@@ -207,6 +220,20 @@ export default function KanbanApp() {
             <Stat dot="bg-slate-500" label="total" value={chassisList.length} valueColor="text-white" />
             <Stat dot="bg-orange-400" label="activos" value={active} valueColor="text-orange-300" />
             <Stat dot="bg-emerald-400" label="entregados" value={delivered} valueColor="text-emerald-300" />
+            <span className={`flex items-center gap-1.5 text-xs ${
+              syncStatus === 'synced' ? 'text-emerald-400' :
+              syncStatus === 'syncing' ? 'text-blue-400' :
+              syncStatus === 'error' ? 'text-red-400' : 'text-slate-600'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                syncStatus === 'synced' ? 'bg-emerald-400' :
+                syncStatus === 'syncing' ? 'bg-blue-400 animate-pulse' :
+                syncStatus === 'error' ? 'bg-red-400' : 'bg-slate-600'
+              }`} />
+              {syncStatus === 'synced' ? 'Sincronizado' :
+               syncStatus === 'syncing' ? 'Guardando...' :
+               syncStatus === 'error' ? 'Error de sync' : 'Solo local'}
+            </span>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
