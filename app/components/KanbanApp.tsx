@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Chassis, ChassisStatus, ChassisSize, ChassisCondition } from '../types';
+import Image from 'next/image';
 import { SIZE_LABELS } from '../services-catalog';
 import ChassisModal from './ChassisModal';
 import { PillGrid, DatePicker, type PillOption } from './FormControls';
@@ -180,19 +181,17 @@ export default function KanbanApp() {
           boxShadow: '0 1px 30px rgba(139,92,246,0.12)',
         }}
       >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: 'linear-gradient(135deg, #f97316, #c2410c)' }}
-          >
-            <span className="text-white font-bold text-sm select-none">FV</span>
-          </div>
-          <div>
-            <h1 className="text-white font-bold text-base leading-tight tracking-tight">
-              Ferrovalle
-            </h1>
-            <p className="text-purple-300/60 text-xs">Gestión de Chasis de Grúas</p>
-          </div>
+        <div className="flex items-center gap-4">
+          <Image
+            src="/ferrovalle-logo.svg"
+            alt="Ferrovalle"
+            width={180}
+            height={20}
+            priority
+            className="shrink-0"
+          />
+          <div className="w-px h-6 bg-white/10 shrink-0" />
+          <p className="text-purple-300/50 text-xs hidden sm:block">Gestión de Chasis de Grúas</p>
         </div>
 
         <div className="flex items-center gap-5">
