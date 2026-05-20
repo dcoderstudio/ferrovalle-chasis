@@ -1,51 +1,33 @@
 import type { Chassis } from '../types';
 
-const url = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(/\/$/, '');
-const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
-const REST = url ? `${url}/rest/v1` : '';
-
 export function isConfigured(): boolean {
-  return !!(url && key);
+  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL);
 }
 
 export async function loadChassis(): Promise<Chassis[] | null> {
-  if (!REST || !key) return null;
   try {
-    const res = await fetch(`${REST}/app_data?key=eq.chassis&select=value`, {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
-    });
-    if (!res.ok) {
-      console.error('[DB] load error:', res.status, await res.text());
-      return null;
-    }
-    const rows: { value: Chassis[] }[] = await res.json();
-    return rows.length ? rows[0].value : null;
+    const res = await fetch('/api/chassis', { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data) ? data : null;
   } catch (e) {
-    console.error('[DB] load exception:', e);
+    console.error('[sync] load error:', e);
     return null;
   }
 }
 
 export async function saveChassis(list: Chassis[]): Promise<boolean> {
-  if (!REST || !key) return false;
   try {
-    const res = await fetch(`${REST}/app_data?key=eq.chassis`, {
-      method: 'PATCH',
-      headers: {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify({ value: list, updated_at: new Date().toISOString() }),
+    const res = await fetch('/api/chassis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(list),
     });
-    if (!res.ok) {
-      console.error('[DB] save error:', res.status, await res.text());
-      return false;
-    }
-    return true;
+    if (!res.ok) return false;
+    const json = await res.json();
+    return json.ok === true;
   } catch (e) {
-    console.error('[DB] save exception:', e);
+    console.error('[sync] save error:', e);
     return false;
   }
 }
