@@ -119,6 +119,7 @@ export default function KanbanApp() {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<ChassisStatus | null>(null);
   const [syncStatus, setSyncStatus] = useState<'local' | 'syncing' | 'synced' | 'error'>('local');
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -143,16 +144,18 @@ export default function KanbanApp() {
           if (stored) setChassislist(JSON.parse(stored));
         } catch {}
       }
+      setDataLoaded(true);
     };
     init();
   }, []);
 
   useEffect(() => {
+    if (!dataLoaded) return; // no guardar hasta que los datos estén cargados
     try { localStorage.setItem('ferrovalle-chassis', JSON.stringify(chassisList)); } catch {}
     if (!isConfigured()) return;
     setSyncStatus('syncing');
     saveChassis(chassisList).then(ok => setSyncStatus(ok ? 'synced' : 'error'));
-  }, [chassisList]);
+  }, [chassisList, dataLoaded]);
 
   const handleAddChassis = (data: Omit<Chassis, 'id' | 'createdAt'>) => {
     setChassislist(prev => [
