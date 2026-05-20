@@ -26,7 +26,7 @@ const CONDITION_OPTIONS: PillOption[] = [
   { value: 'critico', label: 'Estado crítico', sublabel: 'Factor ×2.2' },
 ];
 
-type Tab = 'info' | 'fotos' | 'cotizacion';
+type Tab = 'info' | 'fotos' | 'diagnostico' | 'cotizacion';
 
 const STATUS_OPTIONS: Array<{
   id: ChassisStatus;
@@ -162,8 +162,127 @@ export default function ChassisModal({
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: 'info', label: 'Información' },
     { id: 'fotos', label: 'Fotos' },
+    { id: 'diagnostico', label: 'Diagnóstico' },
     { id: 'cotizacion', label: 'Cotización' },
   ];
+
+  const generateDiagnosisPDF = () => {
+    const today = new Date().toLocaleDateString('es-MX', {
+      day: '2-digit', month: 'long', year: 'numeric',
+    });
+    const selectedList = data.selectedServices.map(sel => {
+      const svc = SERVICES.find(s => s.id === sel.serviceId);
+      if (!svc) return null;
+      return { name: svc.name, unit: svc.unit, quantity: sel.quantity, total: serviceUnitPrice(svc.basePrice) * sel.quantity };
+    }).filter(Boolean);
+
+    const chassisSVG = `<svg viewBox="0 0 800 210" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="800" height="210" fill="#f8fafc" rx="8"/>
+      <rect x="30" y="68" width="740" height="18" rx="3" fill="#1e3a5f"/>
+      <rect x="30" y="124" width="740" height="18" rx="3" fill="#1e3a5f"/>
+      <rect x="30" y="62" width="20" height="96" rx="3" fill="#0f2746"/>
+      <rect x="750" y="62" width="20" height="96" rx="3" fill="#0f2746"/>
+      <rect x="50" y="86" width="700" height="48" fill="#e8f0fa" opacity="0.5"/>
+      <rect x="143" y="68" width="9" height="74" fill="#2a5080"/>
+      <rect x="258" y="68" width="9" height="74" fill="#2a5080"/>
+      <rect x="373" y="68" width="9" height="74" fill="#2a5080"/>
+      <rect x="488" y="68" width="9" height="74" fill="#2a5080"/>
+      <rect x="603" y="68" width="9" height="74" fill="#2a5080"/>
+      <rect x="718" y="68" width="9" height="74" fill="#2a5080"/>
+      <polygon points="50,62 82,62 50,94" fill="#2a5080" opacity="0.55"/>
+      <polygon points="750,62 718,62 750,94" fill="#2a5080" opacity="0.55"/>
+      <polygon points="50,158 82,158 50,126" fill="#2a5080" opacity="0.55"/>
+      <polygon points="750,158 718,158 750,126" fill="#2a5080" opacity="0.55"/>
+      <circle cx="65" cy="76" r="5" fill="#dde6f5"/>
+      <circle cx="65" cy="144" r="5" fill="#dde6f5"/>
+      <circle cx="735" cy="76" r="5" fill="#dde6f5"/>
+      <circle cx="735" cy="144" r="5" fill="#dde6f5"/>
+      <rect x="278" y="84" width="244" height="52" rx="6" fill="#0f2746"/>
+      <rect x="282" y="88" width="236" height="44" rx="4" fill="#1e3a5f"/>
+      <text x="400" y="108" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="3">FERROVALLE</text>
+      <text x="400" y="126" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="18" fill="#f97316" font-weight="800">#${data.chassisNumber || '—'}</text>
+      <line x1="30" y1="42" x2="770" y2="42" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="30" y1="37" x2="30" y2="47" stroke="#94a3b8" stroke-width="1.5"/>
+      <line x1="770" y1="37" x2="770" y2="47" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="400" y="38" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" fill="#94a3b8">Longitud total del chasis</text>
+      <text x="400" y="200" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="10" fill="#64748b">${SIZE_LABELS[data.size] ?? data.size} · ${CONDITION_LABELS[data.condition] ?? data.condition}</text>
+    </svg>`;
+
+    const servicesRows = selectedList.length > 0
+      ? selectedList.map(s => `<tr><td>${s!.name}</td><td style="text-align:center">${s!.quantity} ${s!.unit}</td><td style="text-align:right;font-weight:600;color:#1e3a5f">${formatCurrency(s!.total)}</td></tr>`).join('')
+      : `<tr><td colspan="3" style="color:#94a3b8;font-style:italic;text-align:center">No se han seleccionado servicios aún</td></tr>`;
+
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+    <title>Diagnóstico — Chasis #${data.chassisNumber}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{font-family:'Montserrat',sans-serif;color:#1e293b;background:#fff;padding:40px;font-size:13px}
+      .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:18px;border-bottom:3px solid #1e3a5f}
+      .co{font-size:26px;font-weight:800;color:#1e3a5f;letter-spacing:-0.5px}
+      .co-sub{font-size:11px;color:#64748b;margin-top:3px}
+      .dt h2{font-size:15px;font-weight:700;color:#f97316;text-transform:uppercase;letter-spacing:1px;text-align:right}
+      .dt p{font-size:11px;color:#64748b;margin-top:3px;text-align:right}
+      .sec{margin-bottom:22px}
+      .sec-title{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #e2e8f0}
+      .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+      .fi label{font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px}
+      .fi span{font-size:14px;font-weight:600;color:#1e293b}
+      .drawing{background:#f8fafc;border-radius:10px;padding:16px;border:1px solid #e2e8f0;margin:4px 0}
+      .drawing svg{width:100%;height:auto}
+      table{width:100%;border-collapse:collapse}
+      thead th{background:#1e3a5f;color:#fff;padding:9px 12px;font-size:10px;font-weight:700;text-align:left;text-transform:uppercase;letter-spacing:1px}
+      tbody td{padding:9px 12px;border-bottom:1px solid #f1f5f9;font-size:12px}
+      tbody tr:nth-child(even){background:#f8fafc}
+      .total-bar{display:flex;justify-content:flex-end;align-items:center;gap:20px;padding:12px 14px;background:#1e3a5f;border-radius:0 0 6px 6px;margin-top:0}
+      .tl{font-size:12px;font-weight:600;color:#e2e8f0}
+      .ta{font-size:22px;font-weight:800;color:#f97316}
+      .notes{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;min-height:50px;font-size:13px;color:#475569;line-height:1.6}
+      .footer{margin-top:36px;padding-top:18px;border-top:1px solid #e2e8f0;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+      .sign label{font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:22px}
+      .sign-line{border-top:1px solid #94a3b8}
+      @media print{body{padding:20px}@page{margin:12mm}}
+    </style></head><body>
+    <div class="hdr">
+      <div><div class="co">FERROVALLE</div><div class="co-sub">Mantenimiento y Reparación de Chasis de Grúas</div></div>
+      <div class="dt"><h2>Diagnóstico Técnico</h2><p>Fecha: ${today}</p></div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Información del Chasis</div>
+      <div class="grid">
+        <div class="fi"><label>Número de Chasis</label><span>#${data.chassisNumber || '—'}</span></div>
+        <div class="fi"><label>Tamaño</label><span>${SIZE_LABELS[data.size] ?? data.size}</span></div>
+        <div class="fi"><label>Condición</label><span>${CONDITION_LABELS[data.condition] ?? data.condition}</span></div>
+        ${data.clientName ? `<div class="fi"><label>Cliente</label><span>${data.clientName}</span></div>` : ''}
+        ${data.purchaseOrder ? `<div class="fi"><label>OC</label><span>${data.purchaseOrder}</span></div>` : ''}
+        ${data.commitmentDate ? `<div class="fi"><label>Entrega compromiso</label><span>${new Date(data.commitmentDate+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}</span></div>` : ''}
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Identificación del Chasis</div>
+      <div class="drawing">${chassisSVG}</div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Servicios Requeridos</div>
+      <table><thead><tr><th>Servicio</th><th style="text-align:center">Cantidad</th><th style="text-align:right">Total estimado</th></tr></thead>
+      <tbody>${servicesRows}</tbody></table>
+      ${selectedList.length > 0 ? `<div class="total-bar"><span class="tl">Total estimado</span><span class="ta">${formatCurrency(quotedTotal)}</span></div>` : ''}
+    </div>
+    ${data.notes ? `<div class="sec"><div class="sec-title">Observaciones</div><div class="notes">${data.notes}</div></div>` : ''}
+    <div class="footer">
+      <div class="sign"><label>Técnico responsable</label><div class="sign-line"></div></div>
+      <div class="sign"><label>Fecha</label><div class="sign-line"></div></div>
+      <div class="sign"><label>Firma / Vo.Bo.</label><div class="sign-line"></div></div>
+    </div>
+    </body></html>`;
+
+    const win = window.open('', '_blank', 'width=920,height=720');
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 900);
+  };
 
   return (
     <div
@@ -253,12 +372,20 @@ export default function ChassisModal({
           {activeTab === 'fotos' && (
             <FotosTab data={data} onPhotoUpload={handlePhotoUpload} onRemovePhoto={removePhoto} />
           )}
-          {activeTab === 'cotizacion' && (
-            <CotizacionTab
+          {activeTab === 'diagnostico' && (
+            <DiagnosticoTab
               data={data}
               update={update}
               toggleService={toggleService}
               updateQty={updateQty}
+              serviceUnitPrice={serviceUnitPrice}
+              quotedTotal={quotedTotal}
+              onGeneratePDF={generateDiagnosisPDF}
+            />
+          )}
+          {activeTab === 'cotizacion' && (
+            <CotizacionTab
+              data={data}
               serviceUnitPrice={serviceUnitPrice}
               quotedTotal={quotedTotal}
             />
@@ -488,15 +615,16 @@ function FotosTab({
   );
 }
 
-// ─── Cotización Tab ───────────────────────────────────────────────────────────
+// ─── Diagnóstico Tab ──────────────────────────────────────────────────────────
 
-function CotizacionTab({
+function DiagnosticoTab({
   data,
   update,
   toggleService,
   updateQty,
   serviceUnitPrice,
   quotedTotal,
+  onGeneratePDF,
 }: {
   data: Chassis;
   update: (f: Partial<Chassis>) => void;
@@ -504,6 +632,7 @@ function CotizacionTab({
   updateQty: (id: string, qty: number) => void;
   serviceUnitPrice: (base: number) => number;
   quotedTotal: number;
+  onGeneratePDF: () => void;
 }) {
   const sizeMultiplier = SIZE_MULTIPLIERS[data.size] ?? 1;
   const conditionMultiplier = CONDITION_MULTIPLIERS[data.condition] ?? 1;
@@ -611,39 +740,105 @@ function CotizacionTab({
         </div>
       </div>
 
-      {/* Total */}
-      {quotedTotal > 0 && (
-        <div
-          className="rounded-xl border-2 border-orange-400/20 p-5"
-          style={{ background: 'rgba(249,115,22,0.06)' }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-white">Total cotizado</p>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {data.selectedServices.length} servicio
-                {data.selectedServices.length !== 1 ? 's' : ''}
+      {/* PDF Button */}
+      <button
+        onClick={onGeneratePDF}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-white/[0.08] text-sm font-semibold text-slate-300 hover:text-white hover:border-white/20 transition-all"
+        style={{ background: '#141b2d' }}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="12" y1="18" x2="12" y2="12"/>
+          <line x1="9" y1="15" x2="15" y2="15"/>
+        </svg>
+        Descargar PDF de diagnóstico
+      </button>
+    </div>
+  );
+}
+
+// ─── Cotización Tab (solo lectura) ────────────────────────────────────────────
+
+function CotizacionTab({
+  data,
+  serviceUnitPrice,
+  quotedTotal,
+}: {
+  data: Chassis;
+  serviceUnitPrice: (base: number) => number;
+  quotedTotal: number;
+}) {
+  if (data.selectedServices.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-4">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6 text-slate-600">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+            <line x1="9" y1="16" x2="12" y2="16"/>
+          </svg>
+        </div>
+        <p className="text-slate-400 text-sm font-medium">Sin servicios seleccionados</p>
+        <p className="text-slate-700 text-xs mt-1.5 max-w-xs">
+          Ve a la pestaña <strong className="text-slate-500">Diagnóstico</strong> para marcar los servicios que requiere este chasis
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
+        Servicios seleccionados
+      </p>
+
+      {data.selectedServices.map(sel => {
+        const svc = SERVICES.find(s => s.id === sel.serviceId);
+        if (!svc) return null;
+        const unitPrice = serviceUnitPrice(svc.basePrice);
+        const subtotal = unitPrice * sel.quantity;
+        return (
+          <div
+            key={sel.serviceId}
+            className="flex items-center justify-between p-4 rounded-xl border border-white/[0.06]"
+            style={{ background: '#141b2d' }}
+          >
+            <div className="min-w-0">
+              <p className="text-white font-semibold text-sm">{svc.name}</p>
+              <p className="text-slate-500 text-xs mt-0.5">
+                {sel.quantity} {svc.unit} × {formatCurrency(unitPrice)}
               </p>
             </div>
-            <p className="text-3xl font-bold text-orange-400">{formatCurrency(quotedTotal)}</p>
+            <p className="text-orange-400 font-bold text-sm shrink-0 ml-4">
+              {formatCurrency(subtotal)}
+            </p>
           </div>
-          <div className="mt-4 pt-4 border-t border-white/[0.06]">
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Precio final acordado (sobreescribe la cotización)
-            </label>
-            <input
-              type="number"
-              className="w-full bg-[#1a2235] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/40 transition-all [color-scheme:dark]"
-              value={data.finalPrice ?? ''}
-              onChange={e =>
-                update({ finalPrice: e.target.value ? Number(e.target.value) : null })
-              }
-              placeholder={`Cotización: ${formatCurrency(quotedTotal)}`}
-              min={0}
-            />
+        );
+      })}
+
+      {/* Totales */}
+      <div
+        className="rounded-xl border-2 border-orange-400/20 p-5 mt-2"
+        style={{ background: 'rgba(249,115,22,0.06)' }}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-white">Total cotizado</p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {data.selectedServices.length} servicio{data.selectedServices.length !== 1 ? 's' : ''}
+            </p>
           </div>
+          <p className="text-3xl font-bold text-orange-400">{formatCurrency(quotedTotal)}</p>
         </div>
-      )}
+        {data.finalPrice != null && (
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.06]">
+            <p className="text-sm text-slate-400">Precio final acordado</p>
+            <p className="text-2xl font-bold text-emerald-400">{formatCurrency(data.finalPrice)}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
