@@ -867,15 +867,34 @@ function DiagnosticoTab({
         </div>
       )}
       {/* Read-only review info (admin view) */}
-      {!hidePrice && data.diagnosedBy && (
-        <div className="flex items-center gap-3 rounded-xl border border-blue-400/20 px-4 py-3" style={{ background: 'rgba(14,165,233,0.04)' }}>
-          <div className="w-2 h-2 rounded-full bg-blue-400 shrink-0" />
+      {!hidePrice && (data.diagnosedBy || data.diagnosedAt || data.condition) && (
+        <div className="rounded-xl border border-sky-400/20 p-4 space-y-3" style={{ background: 'rgba(14,165,233,0.04)' }}>
+          <p className="text-[10px] font-semibold text-sky-400/70 uppercase tracking-wider">Información de la revisión</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Realizado por</p>
+              <p className="text-white text-sm font-medium">{data.diagnosedBy || <span className="text-slate-600 italic text-xs">Sin asignar</span>}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Fecha de revisión</p>
+              <p className="text-white text-sm font-medium">
+                {data.diagnosedAt
+                  ? new Date(data.diagnosedAt + (data.diagnosedAt.length === 10 ? 'T12:00:00' : '')).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })
+                  : <span className="text-slate-600 italic text-xs">Sin fecha</span>
+                }
+              </p>
+            </div>
+          </div>
           <div>
-            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Revisión realizada por</p>
-            <p className="text-slate-300 text-sm font-medium">
-              {data.diagnosedBy}
-              {data.diagnosedAt ? ` · ${new Date(data.diagnosedAt + (data.diagnosedAt.length === 10 ? 'T12:00:00' : '')).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}` : ''}
-            </p>
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Condición del chasis</p>
+            <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${
+              data.condition === 'critico'  ? 'bg-red-500/15 text-red-400' :
+              data.condition === 'severo'   ? 'bg-orange-500/15 text-orange-400' :
+              data.condition === 'moderado' ? 'bg-yellow-500/15 text-yellow-400' :
+              'bg-emerald-500/15 text-emerald-400'
+            }`}>
+              {CONDITION_LABELS[data.condition] ?? data.condition}
+            </span>
           </div>
         </div>
       )}
