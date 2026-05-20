@@ -7,6 +7,8 @@ import { SIZE_LABELS } from '../services-catalog';
 import { loadChassis, saveChassis, isConfigured } from '../lib/supabase';
 import ChassisModal from './ChassisModal';
 import { PillGrid, DatePicker, type PillOption } from './FormControls';
+import { getSession, clearSession, hashPassword, type Session } from '../lib/auth';
+import LoginScreen from './LoginScreen';
 
 const SIZE_OPTIONS: PillOption[] = [
   { value: 'pequeño', label: '20 ft', sublabel: 'Chasis estándar' },
@@ -120,6 +122,16 @@ export default function KanbanApp() {
   const [dragOverCol, setDragOverCol] = useState<ChassisStatus | null>(null);
   const [syncStatus, setSyncStatus] = useState<'local' | 'syncing' | 'synced' | 'error'>('local');
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+
+  useEffect(() => {
+    const s = getSession();
+    setSession(s);
+    setAuthChecked(true);
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -195,6 +207,9 @@ export default function KanbanApp() {
   const active = chassisList.filter(c => c.status !== 'entregado').length;
   const delivered = chassisList.filter(c => c.status === 'entregado').length;
 
+  if (!authChecked) return null;
+  if (!session) return <LoginScreen onLogin={() => setSession(getSession())} />;
+
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[#080c14]">
       {/* Header */}
@@ -248,6 +263,42 @@ export default function KanbanApp() {
             <span className="text-base leading-none font-light">+</span>
             <span>Agregar Chasis</span>
           </button>
+
+          {/* User menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowUserMenu(v => !v)}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm transition-all hover:scale-105 select-none"
+              style={{
+                background: `linear-gradient(135deg, ${session.userColor}, ${session.userColor}99)`,
+                boxShadow: `0 2px 12px ${session.userColor}40`,
+              }}
+            >
+              {session.userInitials}
+            </button>
+            {showUserMenu && (
+              <div
+                className="absolute right-0 top-11 w-52 rounded-xl border border-white/[0.08] shadow-2xl z-20 overflow-hidden"
+                style={{ background: '#0e1420' }}
+              >
+                <div className="px-4 py-3 border-b border-white/[0.06]">
+                  <p className="text-white text-sm font-semibold">{session.userName}</p>
+                </div>
+                <button
+                  onClick={() => { setShowUserMenu(false); setShowChangePassword(true); }}
+                  className="w-full px-4 py-2.5 text-left text-sm text-slate-400 hover:text-white hover:bg-white/[0.04] transition-colors"
+                >
+                  Cambiar contraseña
+                </button>
+                <button
+                  onClick={() => { clearSession(); setSession(null); setShowUserMenu(false); }}
+                  className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:text-red-300 hover:bg-white/[0.04] transition-colors"
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -329,6 +380,12 @@ export default function KanbanApp() {
       )}
       {showAddModal && (
         <AddChassisModal onAdd={handleAddChassis} onClose={() => setShowAddModal(false)} />
+      )}
+      {showChangePassword && (
+        <ChangePasswordModal
+          session={session}
+          onClose={() => setShowChangePassword(false)}
+        />
       )}
     </div>
   );
@@ -614,5 +671,76 @@ function Label({ text, required }: { text: string; required?: boolean }) {
     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
       {text} {required && <span className="text-red-400 normal-case">*</span>}
     </label>
+  );
+}
+
+// ─── Change Password Modal ────────────────────────────────────────────────────
+
+function ChangePasswordModal({ session, onClose }: { session: Session; onClose: () => void }) {
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (next !== confirm) { setError('Las contraseñas nuevas no coinciden'); return; }
+    if (next.length < 4) { setError('La contraseña debe tener al menos 4 caracteres'); return; }
+    setLoading(true);
+
+    // Verify current password against DB
+    const users = await fetch('/api/users').then(r => r.json());
+    const me = users.find((u: { id: string; password_hash: string }) => u.id === session.userId);
+    if (!me) { setError('Usuario no encontrado'); setLoading(false); return; }
+
+    const currentHash = await hashPassword(current);
+    if (currentHash !== me.password_hash) { setError('Contraseña actual incorrecta'); setLoading(false); return; }
+
+    const newHash = await hashPassword(next);
+    const res = await fetch('/api/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: session.userId, newHash }),
+    });
+    const json = await res.json();
+    if (!json.ok) { setError('Error al guardar. Intenta de nuevo.'); setLoading(false); return; }
+
+    setSuccess(true);
+    setTimeout(onClose, 1500);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="rounded-2xl w-full max-w-sm p-6 border border-white/[0.08] shadow-2xl" style={{ background: '#0e1420' }} onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm select-none"
+            style={{ background: `linear-gradient(135deg, ${session.userColor}, ${session.userColor}99)` }}>
+            {session.userInitials}
+          </div>
+          <div>
+            <p className="text-white font-semibold text-sm">{session.userName}</p>
+            <p className="text-slate-500 text-xs">Cambiar contraseña</p>
+          </div>
+        </div>
+        {success ? (
+          <p className="text-emerald-400 text-sm text-center py-4 font-medium">¡Contraseña actualizada! ✓</p>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <input type="password" className={inp} placeholder="Contraseña actual" value={current} onChange={e => setCurrent(e.target.value)} autoFocus />
+            <input type="password" className={inp} placeholder="Nueva contraseña" value={next} onChange={e => setNext(e.target.value)} />
+            <input type="password" className={inp} placeholder="Confirmar nueva contraseña" value={confirm} onChange={e => setConfirm(e.target.value)} />
+            {error && <p className="text-red-400 text-xs text-center">{error}</p>}
+            <button type="submit" disabled={!current || !next || !confirm || loading}
+              className="w-full py-2.5 text-white text-sm font-semibold rounded-xl transition-all hover:opacity-90 disabled:opacity-40"
+              style={{ background: 'linear-gradient(135deg, #f97316, #c2410c)' }}>
+              {loading ? 'Guardando...' : 'Guardar contraseña'}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
   );
 }
