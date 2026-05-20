@@ -13,7 +13,7 @@ export async function GET() {
   if (!db) return NextResponse.json([]);
   const { data, error } = await db
     .from('users')
-    .select('id, name, initials, color, password_hash');
+    .select('id, name, initials, color, password_hash, role');
   if (error) return NextResponse.json([], { status: 500 });
   return NextResponse.json(data ?? []);
 }

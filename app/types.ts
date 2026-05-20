@@ -38,4 +38,6 @@ export type Chassis = {
   pdfPurchaseOrderName: string;
   pdfQuotation: string;
   pdfQuotationName: string;
+  diagnosedBy?: string;
+  diagnosedAt?: string;
 };

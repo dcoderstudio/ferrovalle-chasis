@@ -263,14 +263,16 @@ export default function KanbanApp() {
               </span>
             )}
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
-            style={{ background: 'linear-gradient(135deg, #f97316, #c2410c)' }}
-          >
-            <span className="text-base leading-none font-light">+</span>
-            <span>Agregar Chasis</span>
-          </button>
+          {session?.userRole !== 'diagnostico' && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-1.5 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #f97316, #c2410c)' }}
+            >
+              <span className="text-base leading-none font-light">+</span>
+              <span>Agregar Chasis</span>
+            </button>
+          )}
 
           {/* User menu */}
           <div className="relative">
@@ -291,6 +293,9 @@ export default function KanbanApp() {
               >
                 <div className="px-4 py-3 border-b border-white/[0.06]">
                   <p className="text-white text-sm font-semibold">{session.userName}</p>
+                  <p className="text-xs mt-0.5 font-medium" style={{ color: session.userRole === 'diagnostico' ? '#0ea5e9' : '#8b5cf6' }}>
+                    {session.userRole === 'diagnostico' ? 'Personal de Diagnóstico' : 'Administrador'}
+                  </p>
                 </div>
                 <button
                   onClick={() => { setShowUserMenu(false); setShowChangePassword(true); }}
@@ -365,7 +370,7 @@ export default function KanbanApp() {
                             <span className="text-orange-400 text-xs">🚩</span>
                           )}
                         </div>
-                        {chassis.purchaseOrder && (
+                        {chassis.purchaseOrder && session?.userRole !== 'diagnostico' && (
                           <p className="text-slate-600 text-xs mt-0.5">{chassis.purchaseOrder}</p>
                         )}
                       </div>
@@ -426,6 +431,7 @@ export default function KanbanApp() {
                       chassis={chassis}
                       isDragging={draggedId === chassis.id}
                       bar={col.bar}
+                      canInteract={session?.userRole !== 'diagnostico'}
                       onDragStart={() => setDraggedId(chassis.id)}
                       onDragEnd={() => {
                         setDraggedId(null);
@@ -456,6 +462,8 @@ export default function KanbanApp() {
           onUpdate={handleUpdateChassis}
           onDelete={handleDeleteChassis}
           onClose={() => setSelectedChassis(null)}
+          userRole={session?.userRole ?? 'admin'}
+          userName={session?.userName ?? ''}
         />
       )}
       {showAddModal && (
@@ -500,6 +508,7 @@ function ChassisCard({
   chassis,
   isDragging,
   bar,
+  canInteract = true,
   onDragStart,
   onDragEnd,
   onClick,
@@ -508,6 +517,7 @@ function ChassisCard({
   chassis: Chassis;
   isDragging: boolean;
   bar: string;
+  canInteract?: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
   onClick: () => void;
@@ -530,9 +540,9 @@ function ChassisCard({
 
   return (
     <div
-      draggable
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
+      draggable={canInteract}
+      onDragStart={canInteract ? onDragStart : undefined}
+      onDragEnd={canInteract ? onDragEnd : undefined}
       onClick={onClick}
       className={`rounded-xl border border-white/[0.07] overflow-hidden cursor-pointer select-none transition-all ${
         isDragging
@@ -555,6 +565,7 @@ function ChassisCard({
               </span>
             )}
           </div>
+          {canInteract && (
           <button
             onMouseDown={e => e.stopPropagation()}
             onClick={e => { e.stopPropagation(); onTogglePriority(); }}
@@ -569,6 +580,7 @@ function ChassisCard({
               <path d="M1 1v12M1 1h9l-2.5 4L10 9H1V1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" fill={chassis.priority ? 'currentColor' : 'none'} />
             </svg>
           </button>
+          )}
         </div>
 
         {/* Date */}

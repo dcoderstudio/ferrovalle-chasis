@@ -88,14 +88,19 @@ export default function ChassisModal({
   onUpdate,
   onDelete,
   onClose,
+  userRole = 'admin',
+  userName = '',
 }: {
   chassis: Chassis;
   onUpdate: (c: Chassis) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
+  userRole?: 'admin' | 'diagnostico';
+  userName?: string;
 }) {
+  const isDiagnostico = userRole === 'diagnostico';
   const [data, setData] = useState<Chassis>({ ...chassis });
-  const [activeTab, setActiveTab] = useState<Tab>('info');
+  const [activeTab, setActiveTab] = useState<Tab>(isDiagnostico ? 'diagnostico' : 'info');
   const [hasChanges, setHasChanges] = useState(false);
 
   const update = (fields: Partial<Chassis>) => {
@@ -104,7 +109,10 @@ export default function ChassisModal({
   };
 
   const handleSave = () => {
-    onUpdate(data);
+    const toSave = isDiagnostico
+      ? { ...data, diagnosedBy: userName, diagnosedAt: new Date().toISOString() }
+      : data;
+    onUpdate(toSave);
     setHasChanges(false);
   };
 
@@ -159,13 +167,15 @@ export default function ChassisModal({
     return svc ? sum + serviceUnitPrice(svc) * sel.quantity : sum;
   }, 0);
 
-  const TABS: Array<{ id: Tab; label: string }> = [
-    { id: 'info', label: 'Información' },
-    { id: 'fotos', label: 'Fotos' },
-    { id: 'avance', label: 'Avance' },
-    { id: 'diagnostico', label: 'Diagnóstico' },
-    { id: 'cotizacion', label: 'Cotización' },
-  ];
+  const TABS: Array<{ id: Tab; label: string }> = isDiagnostico
+    ? [{ id: 'diagnostico', label: 'Diagnóstico' }]
+    : [
+        { id: 'info', label: 'Información' },
+        { id: 'fotos', label: 'Fotos' },
+        { id: 'avance', label: 'Avance' },
+        { id: 'diagnostico', label: 'Diagnóstico' },
+        { id: 'cotizacion', label: 'Cotización' },
+      ];
 
   const generateDiagnosisPDF = () => {
     const today = new Date().toLocaleDateString('es-MX', {
@@ -176,6 +186,8 @@ export default function ChassisModal({
       if (!svc) return null;
       return { name: svc.name, quantity: sel.quantity, total: serviceUnitPrice(svc) * sel.quantity };
     }).filter(Boolean);
+
+    const techName = isDiagnostico ? userName : (data.diagnosedBy ?? '');
 
     const chassisSVG = `<svg viewBox="0 0 800 210" xmlns="http://www.w3.org/2000/svg">
       <rect x="0" y="0" width="800" height="210" fill="#f8fafc" rx="8"/>
@@ -209,9 +221,13 @@ export default function ChassisModal({
       <text x="400" y="200" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="10" fill="#64748b">${SIZE_LABELS[data.size] ?? data.size} · ${CONDITION_LABELS[data.condition] ?? data.condition}</text>
     </svg>`;
 
-    const servicesRows = selectedList.length > 0
+    const servicesRowsFull = selectedList.length > 0
       ? selectedList.map(s => `<tr><td>${s!.name}</td><td style="text-align:center">${s!.quantity}</td><td style="text-align:right;font-weight:600;color:#1e3a5f">${formatCurrency(s!.total)}</td></tr>`).join('')
       : `<tr><td colspan="3" style="color:#94a3b8;font-style:italic;text-align:center">No se han seleccionado servicios aún</td></tr>`;
+
+    const servicesRowsNoPrices = selectedList.length > 0
+      ? selectedList.map(s => `<tr><td>${s!.name}</td><td style="text-align:center">${s!.quantity}</td></tr>`).join('')
+      : `<tr><td colspan="2" style="color:#94a3b8;font-style:italic;text-align:center">No se han seleccionado servicios aún</td></tr>`;
 
     const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
     <title>Diagnóstico — Chasis #${data.chassisNumber}</title>
@@ -254,9 +270,10 @@ export default function ChassisModal({
         <div class="fi"><label>Número de Chasis</label><span>#${data.chassisNumber || '—'}</span></div>
         <div class="fi"><label>Tamaño</label><span>${SIZE_LABELS[data.size] ?? data.size}</span></div>
         <div class="fi"><label>Condición</label><span>${CONDITION_LABELS[data.condition] ?? data.condition}</span></div>
-        ${data.clientName ? `<div class="fi"><label>Cliente</label><span>${data.clientName}</span></div>` : ''}
-        ${data.purchaseOrder ? `<div class="fi"><label>OC</label><span>${data.purchaseOrder}</span></div>` : ''}
-        ${data.commitmentDate ? `<div class="fi"><label>Entrega compromiso</label><span>${new Date(data.commitmentDate+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}</span></div>` : ''}
+        ${techName ? `<div class="fi"><label>Realizado por</label><span>${techName}</span></div>` : ''}
+        ${!isDiagnostico && data.clientName ? `<div class="fi"><label>Cliente</label><span>${data.clientName}</span></div>` : ''}
+        ${!isDiagnostico && data.purchaseOrder ? `<div class="fi"><label>OC</label><span>${data.purchaseOrder}</span></div>` : ''}
+        ${!isDiagnostico && data.commitmentDate ? `<div class="fi"><label>Entrega compromiso</label><span>${new Date(data.commitmentDate+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}</span></div>` : ''}
       </div>
     </div>
     <div class="sec">
@@ -265,9 +282,10 @@ export default function ChassisModal({
     </div>
     <div class="sec">
       <div class="sec-title">Servicios Requeridos</div>
-      <table><thead><tr><th>Servicio</th><th style="text-align:center">Cantidad</th><th style="text-align:right">Total estimado</th></tr></thead>
-      <tbody>${servicesRows}</tbody></table>
-      ${selectedList.length > 0 ? `<div class="total-bar"><span class="tl">Total estimado</span><span class="ta">${formatCurrency(quotedTotal)}</span></div>` : ''}
+      ${isDiagnostico
+        ? `<table><thead><tr><th>Servicio</th><th style="text-align:center">Cantidad</th></tr></thead><tbody>${servicesRowsNoPrices}</tbody></table>`
+        : `<table><thead><tr><th>Servicio</th><th style="text-align:center">Cantidad</th><th style="text-align:right">Total estimado</th></tr></thead><tbody>${servicesRowsFull}</tbody></table>${selectedList.length > 0 ? `<div class="total-bar"><span class="tl">Total estimado</span><span class="ta">${formatCurrency(quotedTotal)}</span></div>` : ''}`
+      }
     </div>
     ${data.notes ? `<div class="sec"><div class="sec-title">Observaciones</div><div class="notes">${data.notes}</div></div>` : ''}
     <div class="footer">
@@ -306,8 +324,10 @@ export default function ChassisModal({
                 Chasis #{data.chassisNumber || '—'}
               </h2>
               <p className="text-purple-300/60 text-sm mt-0.5">
-                {data.clientName || 'Sin cliente asignado'}
-                {data.purchaseOrder ? ` · OC: ${data.purchaseOrder}` : ''}
+                {isDiagnostico
+                  ? `${SIZE_LABELS[data.size] ?? data.size} · ${CONDITION_LABELS[data.condition] ?? data.condition}`
+                  : `${data.clientName || 'Sin cliente asignado'}${data.purchaseOrder ? ` · OC: ${data.purchaseOrder}` : ''}`
+                }
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -346,7 +366,7 @@ export default function ChassisModal({
               }`}
             >
               {tab.label}
-              {tab.id === 'cotizacion' && quotedTotal > 0 && (
+              {tab.id === 'cotizacion' && quotedTotal > 0 && !isDiagnostico && (
                 <span className="ml-2 text-xs bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded-full">
                   {formatCurrency(quotedTotal)}
                 </span>
@@ -372,6 +392,8 @@ export default function ChassisModal({
               serviceUnitPrice={serviceUnitPrice}
               quotedTotal={quotedTotal}
               onGeneratePDF={generateDiagnosisPDF}
+              hidePrice={isDiagnostico}
+              loggedUserName={isDiagnostico ? userName : undefined}
             />
           )}
           {activeTab === 'cotizacion' && (
@@ -385,12 +407,16 @@ export default function ChassisModal({
 
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-white/[0.06] shrink-0 bg-[#0a0f1a]">
-          <button
-            onClick={() => onDelete(chassis.id)}
-            className="text-red-500/70 hover:text-red-400 text-sm font-medium transition-colors"
-          >
-            Eliminar chasis
-          </button>
+          {!isDiagnostico ? (
+            <button
+              onClick={() => onDelete(chassis.id)}
+              className="text-red-500/70 hover:text-red-400 text-sm font-medium transition-colors"
+            >
+              Eliminar chasis
+            </button>
+          ) : (
+            <div />
+          )}
           <div className="flex gap-3">
             <button
               onClick={onClose}
@@ -714,6 +740,8 @@ function DiagnosticoTab({
   serviceUnitPrice,
   quotedTotal,
   onGeneratePDF,
+  hidePrice = false,
+  loggedUserName,
 }: {
   data: Chassis;
   toggleService: (id: string) => void;
@@ -721,6 +749,8 @@ function DiagnosticoTab({
   serviceUnitPrice: (svc: Service) => number;
   quotedTotal: number;
   onGeneratePDF: () => void;
+  hidePrice?: boolean;
+  loggedUserName?: string;
 }) {
   const [search, setSearch] = useState('');
   const sizeMultiplier = SIZE_MULTIPLIERS[data.size] ?? 1;
@@ -754,21 +784,25 @@ function DiagnosticoTab({
           <p className={`text-xs font-medium leading-tight ${sel ? 'text-orange-200' : 'text-slate-300'}`}>
             {svc.name}
           </p>
-          <span
-            className={`inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-              svc.affectedBySize
-                ? 'bg-blue-500/15 text-blue-400'
-                : 'bg-white/[0.06] text-slate-600'
-            }`}
-          >
-            {svc.affectedBySize ? '×Tamaño' : 'Precio fijo'}
-          </span>
+          {!hidePrice && (
+            <span
+              className={`inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                svc.affectedBySize
+                  ? 'bg-blue-500/15 text-blue-400'
+                  : 'bg-white/[0.06] text-slate-600'
+              }`}
+            >
+              {svc.affectedBySize ? '×Tamaño' : 'Precio fijo'}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <div className="text-right">
-            <p className="text-xs text-slate-600 whitespace-nowrap">{formatCurrency(unitPrice)}</p>
-            {sel && <p className="text-xs font-bold text-orange-400">{formatCurrency(subtotal)}</p>}
-          </div>
+          {!hidePrice && (
+            <div className="text-right">
+              <p className="text-xs text-slate-600 whitespace-nowrap">{formatCurrency(unitPrice)}</p>
+              {sel && <p className="text-xs font-bold text-orange-400">{formatCurrency(subtotal)}</p>}
+            </div>
+          )}
           {sel && (
             <div className="flex items-center gap-0.5">
               <button onClick={() => updateQty(svc.id, sel.quantity - 1)}
@@ -785,7 +819,31 @@ function DiagnosticoTab({
 
   return (
     <div className="space-y-4">
-      {/* Factor panel */}
+      {/* Técnico info (only for diagnosis role) */}
+      {loggedUserName && (
+        <div className="flex items-center gap-3 rounded-xl border border-blue-400/20 px-4 py-3" style={{ background: 'rgba(14,165,233,0.06)' }}>
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold text-xs shrink-0"
+            style={{ background: 'linear-gradient(135deg, #0ea5e9, #0ea5e980)' }}>
+            {loggedUserName.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase()}
+          </div>
+          <div>
+            <p className="text-[10px] text-blue-400/70 font-semibold uppercase tracking-wider">Técnico de diagnóstico</p>
+            <p className="text-white text-sm font-semibold">{loggedUserName}</p>
+          </div>
+        </div>
+      )}
+      {/* Show who did the diagnosis (admin view, if already diagnosed) */}
+      {!loggedUserName && data.diagnosedBy && (
+        <div className="flex items-center gap-3 rounded-xl border border-blue-400/20 px-4 py-3" style={{ background: 'rgba(14,165,233,0.04)' }}>
+          <div className="w-2 h-2 rounded-full bg-blue-400 shrink-0" />
+          <div>
+            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Diagnóstico realizado por</p>
+            <p className="text-slate-300 text-sm font-medium">{data.diagnosedBy}{data.diagnosedAt ? ` · ${new Date(data.diagnosedAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}` : ''}</p>
+          </div>
+        </div>
+      )}
+      {/* Factor panel (admin only) */}
+      {!hidePrice && (
       <div className="rounded-xl border border-white/[0.06] p-3" style={{ background: '#141b2d' }}>
         <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Factores de precio</p>
         <div className="grid grid-cols-3 gap-2">
@@ -801,6 +859,7 @@ function DiagnosticoTab({
           <span className="text-slate-500 font-semibold">●</span> Precio fijo: el mismo independiente del tamaño
         </p>
       </div>
+      )}
 
       {/* Search */}
       <div className="relative">
@@ -844,14 +903,21 @@ function DiagnosticoTab({
         </div>
       )}
 
-      {/* Running total */}
-      {quotedTotal > 0 && (
+      {/* Running total (admin only) */}
+      {!hidePrice && quotedTotal > 0 && (
         <div className="sticky bottom-0 flex items-center justify-between rounded-xl border border-orange-400/20 px-4 py-3"
           style={{ background: 'rgba(15,20,32,0.95)', backdropFilter: 'blur(8px)' }}>
           <div>
             <p className="text-xs text-slate-400">{data.selectedServices.length} servicio{data.selectedServices.length !== 1 ? 's' : ''} seleccionado{data.selectedServices.length !== 1 ? 's' : ''}</p>
           </div>
           <p className="text-xl font-bold text-orange-400">{formatCurrency(quotedTotal)}</p>
+        </div>
+      )}
+      {/* Service count for diagnostico role */}
+      {hidePrice && data.selectedServices.length > 0 && (
+        <div className="sticky bottom-0 flex items-center justify-center rounded-xl border border-blue-400/20 px-4 py-3"
+          style={{ background: 'rgba(15,20,32,0.95)', backdropFilter: 'blur(8px)' }}>
+          <p className="text-sm text-blue-300 font-semibold">{data.selectedServices.length} servicio{data.selectedServices.length !== 1 ? 's' : ''} marcado{data.selectedServices.length !== 1 ? 's' : ''}</p>
         </div>
       )}
 

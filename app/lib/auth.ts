@@ -4,6 +4,7 @@ export type UserProfile = {
   initials: string;
   color: string;
   password_hash: string;
+  role?: 'admin' | 'diagnostico';
 };
 
 export type Session = {
@@ -11,6 +12,7 @@ export type Session = {
   userName: string;
   userColor: string;
   userInitials: string;
+  userRole: 'admin' | 'diagnostico';
 };
 
 export async function hashPassword(password: string): Promise<string> {
@@ -26,7 +28,9 @@ export function getSession(): Session | null {
   if (typeof window === 'undefined') return null;
   try {
     const s = localStorage.getItem('ferrovalle-session');
-    return s ? JSON.parse(s) : null;
+    if (!s) return null;
+    const parsed = JSON.parse(s);
+    return { ...parsed, userRole: parsed.userRole ?? 'admin' };
   } catch {
     return null;
   }

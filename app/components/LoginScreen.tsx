@@ -37,6 +37,7 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
         userName: selected.name,
         userColor: selected.color,
         userInitials: selected.initials,
+        userRole: selected.role ?? 'admin',
       });
       onLogin();
     } else {
