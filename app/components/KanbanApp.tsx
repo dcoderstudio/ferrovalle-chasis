@@ -8,10 +8,8 @@ import ChassisModal from './ChassisModal';
 import { PillGrid, DatePicker, type PillOption } from './FormControls';
 
 const SIZE_OPTIONS: PillOption[] = [
-  { value: 'pequeño', label: 'Pequeño', sublabel: '< 6m' },
-  { value: 'mediano', label: 'Mediano', sublabel: '6–10m' },
-  { value: 'grande', label: 'Grande', sublabel: '10–15m' },
-  { value: 'extra-grande', label: 'Extra Grande', sublabel: '> 15m' },
+  { value: 'pequeño', label: 'Chico', sublabel: 'Chasis menor' },
+  { value: 'grande', label: 'Grande', sublabel: 'Chasis mayor' },
 ];
 
 const CONDITION_OPTIONS: PillOption[] = [
@@ -424,30 +422,38 @@ function AddChassisModal({
   onAdd: (data: Omit<Chassis, 'id' | 'createdAt'>) => void;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState({
-    chassisNumber: '',
-    clientName: '',
-    purchaseOrder: '',
-    size: 'mediano' as ChassisSize,
-    condition: 'moderado' as ChassisCondition,
-    commitmentDate: '',
-    notes: '',
-  });
+  const [chassisNumber, setChassisNumber] = useState('');
+  const [size, setSize] = useState<ChassisSize>('pequeño');
+  const [condition, setCondition] = useState<ChassisCondition>('moderado');
+  const [notes, setNotes] = useState('');
+  const [photoBefore, setPhotoBefore] = useState<string>('');
 
-  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
-    setForm(prev => ({ ...prev, [k]: v }));
+  const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setPhotoBefore(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.chassisNumber.trim()) return;
+    if (!chassisNumber.trim()) return;
     onAdd({
-      ...form,
+      chassisNumber,
+      size,
+      condition,
+      notes,
       status: 'recibido',
-      photosBefore: [],
+      clientName: '',
+      purchaseOrder: '',
+      photosBefore: photoBefore ? [photoBefore] : [],
       photosDetail: [],
       photosAfter: [],
       selectedServices: [],
       finalPrice: null,
+      commitmentDate: '',
       deliveryDate: '',
     });
   };
@@ -458,7 +464,7 @@ function AddChassisModal({
       onClick={onClose}
     >
       <div
-        className="rounded-2xl shadow-2xl w-full max-w-lg border border-white/[0.08] overflow-hidden"
+        className="rounded-2xl shadow-2xl w-full max-w-md border border-white/[0.08] overflow-hidden"
         style={{ background: '#0e1420' }}
         onClick={e => e.stopPropagation()}
       >
@@ -467,79 +473,87 @@ function AddChassisModal({
           style={{ background: 'linear-gradient(135deg, #1e0a3c 0%, #0c1e4a 100%)' }}
         >
           <h2 className="text-white font-bold text-lg tracking-tight">Registrar nuevo chasis</h2>
-          <p className="text-purple-300/50 text-xs mt-0.5">
-            Ingresa la información básica del chasis
-          </p>
+          <p className="text-purple-300/50 text-xs mt-0.5">Información inicial del chasis</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 sm:col-span-1">
-              <Label text="Número de Chasis" required />
-              <input
-                className={inp}
-                value={form.chassisNumber}
-                onChange={e => set('chassisNumber', e.target.value)}
-                placeholder="ej. CH-2024-001"
-                required
-                autoFocus
-              />
-            </div>
-            <div className="col-span-2 sm:col-span-1">
-              <Label text="Cliente" />
-              <input
-                className={inp}
-                value={form.clientName}
-                onChange={e => set('clientName', e.target.value)}
-                placeholder="Nombre del cliente"
-              />
-            </div>
-            <div className="col-span-2 sm:col-span-1">
-              <Label text="Orden de Compra" />
-              <input
-                className={inp}
-                value={form.purchaseOrder}
-                onChange={e => set('purchaseOrder', e.target.value)}
-                placeholder="OC-XXXX"
-              />
-            </div>
-            <div className="col-span-2 sm:col-span-1">
-              <Label text="Fecha de Entrega" />
-              <DatePicker
-                value={form.commitmentDate}
-                onChange={v => set('commitmentDate', v)}
-                placeholder="Seleccionar fecha"
-              />
-            </div>
-            <div>
-              <Label text="Tamaño" />
-              <PillGrid
-                value={form.size}
-                onChange={v => set('size', v as ChassisSize)}
-                options={SIZE_OPTIONS}
-              />
-            </div>
-            <div>
-              <Label text="Condición" />
-              <PillGrid
-                value={form.condition}
-                onChange={v => set('condition', v as ChassisCondition)}
-                options={CONDITION_OPTIONS}
-              />
-            </div>
-            <div className="col-span-2">
-              <Label text="Notas" />
-              <textarea
-                className={`${inp} resize-none`}
-                rows={2}
-                value={form.notes}
-                onChange={e => set('notes', e.target.value)}
-                placeholder="Observaciones iniciales..."
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {/* Número */}
+          <div>
+            <Label text="Número de Chasis" required />
+            <input
+              className={inp}
+              value={chassisNumber}
+              onChange={e => setChassisNumber(e.target.value)}
+              placeholder="ej. CH-2024-001"
+              required
+              autoFocus
+            />
           </div>
 
-          <div className="flex justify-end gap-3 mt-6 pt-5 border-t border-white/[0.06]">
+          {/* Tamaño */}
+          <div>
+            <Label text="Tamaño" />
+            <PillGrid
+              value={size}
+              onChange={v => setSize(v as ChassisSize)}
+              options={SIZE_OPTIONS}
+            />
+          </div>
+
+          {/* Condición */}
+          <div>
+            <Label text="Condición general" />
+            <PillGrid
+              value={condition}
+              onChange={v => setCondition(v as ChassisCondition)}
+              options={CONDITION_OPTIONS}
+            />
+          </div>
+
+          {/* Notas */}
+          <div>
+            <Label text="Notas" />
+            <textarea
+              className={`${inp} resize-none`}
+              rows={2}
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Observaciones iniciales..."
+            />
+          </div>
+
+          {/* Foto del antes */}
+          <div>
+            <Label text="Foto del antes" />
+            {photoBefore ? (
+              <div className="relative group rounded-xl overflow-hidden border border-white/[0.08] aspect-video">
+                <img src={photoBefore} alt="Foto antes" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setPhotoBefore('')}
+                    className="opacity-0 group-hover:opacity-100 bg-red-500 text-white text-xs px-3 py-1.5 rounded-lg transition-opacity font-semibold"
+                  >
+                    Eliminar foto
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label
+                className="flex flex-col items-center justify-center border-2 border-dashed border-cyan-400/25 rounded-xl py-8 cursor-pointer hover:border-cyan-400/50 hover:bg-cyan-400/[0.03] transition-all"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-cyan-400/40 mb-2">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+                <p className="text-sm text-slate-500">Click para subir foto del antes</p>
+                <p className="text-xs text-slate-700 mt-0.5">JPG, PNG</p>
+                <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+              </label>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2 border-t border-white/[0.06]">
             <button
               type="button"
               onClick={onClose}
