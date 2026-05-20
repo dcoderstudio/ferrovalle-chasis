@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { Chassis, ChassisStatus, ChassisSize, ChassisCondition } from '../types';
+// ChassisSize and ChassisCondition used in cast expressions below
 import {
   SERVICES,
   SIZE_MULTIPLIERS,
@@ -9,6 +10,21 @@ import {
   SIZE_LABELS,
   CONDITION_LABELS,
 } from '../services-catalog';
+import { PillGrid, DatePicker, type PillOption } from './FormControls';
+
+const SIZE_OPTIONS: PillOption[] = [
+  { value: 'pequeño', label: 'Pequeño', sublabel: '< 6m' },
+  { value: 'mediano', label: 'Mediano', sublabel: '6–10m' },
+  { value: 'grande', label: 'Grande', sublabel: '10–15m' },
+  { value: 'extra-grande', label: 'Extra Grande', sublabel: '> 15m' },
+];
+
+const CONDITION_OPTIONS: PillOption[] = [
+  { value: 'bueno', label: 'Buenas condiciones', sublabel: 'Factor ×1.0' },
+  { value: 'moderado', label: 'Desgaste moderado', sublabel: 'Factor ×1.3' },
+  { value: 'severo', label: 'Deterioro severo', sublabel: 'Factor ×1.7' },
+  { value: 'critico', label: 'Estado crítico', sublabel: 'Factor ×2.2' },
+];
 
 type Tab = 'info' | 'fotos' | 'cotizacion';
 
@@ -318,45 +334,31 @@ function InfoTab({ data, update }: { data: Chassis; update: (f: Partial<Chassis>
         />
       </Field>
       <Field label="Tamaño del Chasis">
-        <select
-          className={inp}
+        <PillGrid
           value={data.size}
-          onChange={e => update({ size: e.target.value as ChassisSize })}
-        >
-          {Object.entries(SIZE_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v}
-            </option>
-          ))}
-        </select>
+          onChange={v => update({ size: v as ChassisSize })}
+          options={SIZE_OPTIONS}
+        />
       </Field>
       <Field label="Condición General">
-        <select
-          className={inp}
+        <PillGrid
           value={data.condition}
-          onChange={e => update({ condition: e.target.value as ChassisCondition })}
-        >
-          {Object.entries(CONDITION_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v}
-            </option>
-          ))}
-        </select>
+          onChange={v => update({ condition: v as ChassisCondition })}
+          options={CONDITION_OPTIONS}
+        />
       </Field>
       <Field label="Fecha Compromiso de Entrega">
-        <input
-          type="date"
-          className={inp}
+        <DatePicker
           value={data.commitmentDate}
-          onChange={e => update({ commitmentDate: e.target.value })}
+          onChange={v => update({ commitmentDate: v })}
+          placeholder="Seleccionar fecha límite"
         />
       </Field>
       <Field label="Fecha de Entrega Real">
-        <input
-          type="date"
-          className={inp}
+        <DatePicker
           value={data.deliveryDate}
-          onChange={e => update({ deliveryDate: e.target.value })}
+          onChange={v => update({ deliveryDate: v })}
+          placeholder="Fecha en que se entregó"
         />
       </Field>
       <div className="sm:col-span-2">

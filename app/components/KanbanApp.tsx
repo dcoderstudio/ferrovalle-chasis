@@ -2,8 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import type { Chassis, ChassisStatus, ChassisSize, ChassisCondition } from '../types';
-import { SIZE_LABELS, CONDITION_LABELS } from '../services-catalog';
+import { SIZE_LABELS } from '../services-catalog';
 import ChassisModal from './ChassisModal';
+import { PillGrid, DatePicker, type PillOption } from './FormControls';
+
+const SIZE_OPTIONS: PillOption[] = [
+  { value: 'pequeño', label: 'Pequeño', sublabel: '< 6m' },
+  { value: 'mediano', label: 'Mediano', sublabel: '6–10m' },
+  { value: 'grande', label: 'Grande', sublabel: '10–15m' },
+  { value: 'extra-grande', label: 'Extra Grande', sublabel: '> 15m' },
+];
+
+const CONDITION_OPTIONS: PillOption[] = [
+  { value: 'bueno', label: 'Buenas condiciones', sublabel: 'Factor ×1.0' },
+  { value: 'moderado', label: 'Desgaste moderado', sublabel: 'Factor ×1.3' },
+  { value: 'severo', label: 'Deterioro severo', sublabel: 'Factor ×1.7' },
+  { value: 'critico', label: 'Estado crítico', sublabel: 'Factor ×2.2' },
+];
 
 type ColumnConfig = {
   id: ChassisStatus;
@@ -491,40 +506,27 @@ function AddChassisModal({
             </div>
             <div className="col-span-2 sm:col-span-1">
               <Label text="Fecha de Entrega" />
-              <input
-                type="date"
-                className={inp}
+              <DatePicker
                 value={form.commitmentDate}
-                onChange={e => set('commitmentDate', e.target.value)}
+                onChange={v => set('commitmentDate', v)}
+                placeholder="Seleccionar fecha"
               />
             </div>
             <div>
               <Label text="Tamaño" />
-              <select
-                className={inp}
+              <PillGrid
                 value={form.size}
-                onChange={e => set('size', e.target.value as ChassisSize)}
-              >
-                {Object.entries(SIZE_LABELS).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v}
-                  </option>
-                ))}
-              </select>
+                onChange={v => set('size', v as ChassisSize)}
+                options={SIZE_OPTIONS}
+              />
             </div>
             <div>
               <Label text="Condición" />
-              <select
-                className={inp}
+              <PillGrid
                 value={form.condition}
-                onChange={e => set('condition', e.target.value as ChassisCondition)}
-              >
-                {Object.entries(CONDITION_LABELS).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v}
-                  </option>
-                ))}
-              </select>
+                onChange={v => set('condition', v as ChassisCondition)}
+                options={CONDITION_OPTIONS}
+              />
             </div>
             <div className="col-span-2">
               <Label text="Notas" />
