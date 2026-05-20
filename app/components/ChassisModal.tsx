@@ -99,7 +99,11 @@ export default function ChassisModal({
   userName?: string;
 }) {
   const isDiagnostico = userRole === 'diagnostico';
-  const [data, setData] = useState<Chassis>({ ...chassis });
+  const [data, setData] = useState<Chassis>({
+    ...chassis,
+    diagnosedBy: chassis.diagnosedBy || (isDiagnostico ? userName : ''),
+    diagnosedAt: chassis.diagnosedAt || (isDiagnostico ? new Date().toISOString().split('T')[0] : ''),
+  });
   const [activeTab, setActiveTab] = useState<Tab>(isDiagnostico ? 'diagnostico' : 'info');
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -109,10 +113,7 @@ export default function ChassisModal({
   };
 
   const handleSave = () => {
-    const toSave = isDiagnostico
-      ? { ...data, diagnosedBy: userName, diagnosedAt: new Date().toISOString() }
-      : data;
-    onUpdate(toSave);
+    onUpdate(data);
     setHasChanges(false);
   };
 
@@ -168,7 +169,7 @@ export default function ChassisModal({
   }, 0);
 
   const TABS: Array<{ id: Tab; label: string }> = isDiagnostico
-    ? [{ id: 'diagnostico', label: 'Diagnóstico' }]
+    ? [{ id: 'fotos', label: 'Fotos' }, { id: 'diagnostico', label: 'Revisión' }]
     : [
         { id: 'info', label: 'Información' },
         { id: 'fotos', label: 'Fotos' },
@@ -394,6 +395,7 @@ export default function ChassisModal({
               onGeneratePDF={generateDiagnosisPDF}
               hidePrice={isDiagnostico}
               loggedUserName={isDiagnostico ? userName : undefined}
+              onUpdate={isDiagnostico ? update : undefined}
             />
           )}
           {activeTab === 'cotizacion' && (
@@ -742,6 +744,7 @@ function DiagnosticoTab({
   onGeneratePDF,
   hidePrice = false,
   loggedUserName,
+  onUpdate,
 }: {
   data: Chassis;
   toggleService: (id: string) => void;
@@ -751,6 +754,7 @@ function DiagnosticoTab({
   onGeneratePDF: () => void;
   hidePrice?: boolean;
   loggedUserName?: string;
+  onUpdate?: (fields: Partial<Chassis>) => void;
 }) {
   const [search, setSearch] = useState('');
   const sizeMultiplier = SIZE_MULTIPLIERS[data.size] ?? 1;
@@ -819,26 +823,46 @@ function DiagnosticoTab({
 
   return (
     <div className="space-y-4">
-      {/* Técnico info (only for diagnosis role) */}
-      {loggedUserName && (
-        <div className="flex items-center gap-3 rounded-xl border border-blue-400/20 px-4 py-3" style={{ background: 'rgba(14,165,233,0.06)' }}>
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold text-xs shrink-0"
-            style={{ background: 'linear-gradient(135deg, #0ea5e9, #0ea5e980)' }}>
-            {loggedUserName.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase()}
+      {/* Editable review info (diagnosis role) */}
+      {hidePrice && onUpdate && (
+        <div className="rounded-xl border border-sky-400/20 p-4 space-y-3" style={{ background: 'rgba(14,165,233,0.04)' }}>
+          <p className="text-[10px] font-semibold text-sky-400/70 uppercase tracking-wider">Información de la revisión</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label="Realizado por">
+              <input
+                className={inp}
+                value={data.diagnosedBy ?? ''}
+                onChange={e => onUpdate({ diagnosedBy: e.target.value })}
+                placeholder="Nombre del técnico"
+              />
+            </Field>
+            <Field label="Fecha de revisión">
+              <DatePicker
+                value={data.diagnosedAt?.split('T')[0] ?? ''}
+                onChange={v => onUpdate({ diagnosedAt: v })}
+                placeholder="Seleccionar fecha"
+              />
+            </Field>
           </div>
-          <div>
-            <p className="text-[10px] text-blue-400/70 font-semibold uppercase tracking-wider">Técnico de diagnóstico</p>
-            <p className="text-white text-sm font-semibold">{loggedUserName}</p>
-          </div>
+          <Field label="Condición del chasis">
+            <PillGrid
+              value={data.condition}
+              onChange={v => onUpdate({ condition: v as ChassisCondition })}
+              options={CONDITION_OPTIONS}
+            />
+          </Field>
         </div>
       )}
-      {/* Show who did the diagnosis (admin view, if already diagnosed) */}
-      {!loggedUserName && data.diagnosedBy && (
+      {/* Read-only review info (admin view) */}
+      {!hidePrice && data.diagnosedBy && (
         <div className="flex items-center gap-3 rounded-xl border border-blue-400/20 px-4 py-3" style={{ background: 'rgba(14,165,233,0.04)' }}>
           <div className="w-2 h-2 rounded-full bg-blue-400 shrink-0" />
           <div>
-            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Diagnóstico realizado por</p>
-            <p className="text-slate-300 text-sm font-medium">{data.diagnosedBy}{data.diagnosedAt ? ` · ${new Date(data.diagnosedAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}` : ''}</p>
+            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Revisión realizada por</p>
+            <p className="text-slate-300 text-sm font-medium">
+              {data.diagnosedBy}
+              {data.diagnosedAt ? ` · ${new Date(data.diagnosedAt + (data.diagnosedAt.length === 10 ? 'T12:00:00' : '')).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}` : ''}
+            </p>
           </div>
         </div>
       )}

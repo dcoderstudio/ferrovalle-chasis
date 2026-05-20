@@ -20,9 +20,7 @@ const ADMIN_USERS = [
 ];
 
 const DIAGNOSIS_USERS = [
-  { id: 'tecnico-diag-1', name: 'Técnico Diagnóstico 1', initials: 'T1', color: '#0ea5e9', role: 'diagnostico' },
-  { id: 'tecnico-diag-2', name: 'Técnico Diagnóstico 2', initials: 'T2', color: '#0ea5e9', role: 'diagnostico' },
-  { id: 'tecnico-diag-3', name: 'Técnico Diagnóstico 3', initials: 'T3', color: '#0ea5e9', role: 'diagnostico' },
+  { id: 'tecnico-diag-1', name: 'Técnico Diagnóstico', initials: 'TD', color: '#0ea5e9', role: 'diagnostico' },
 ];
 
 export async function GET() {
