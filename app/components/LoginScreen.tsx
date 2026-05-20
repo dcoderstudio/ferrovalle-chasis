@@ -63,11 +63,15 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
           userRole: selected.role,
         });
         onLogin();
-      } else if (json.reason === 'not_configured' || json.reason === 'db_error') {
-        setError(`Error del servidor (${json.reason}). Avisa al administrador.`);
-        setLoading(false);
       } else {
-        setError('Contraseña incorrecta');
+        const msg: Record<string, string> = {
+          wrong_password: 'Contraseña incorrecta',
+          user_not_found: 'Usuario no encontrado en la base de datos',
+          not_configured: 'Error de servidor: no configurado',
+          db_error: `Error de base de datos: ${json.detail ?? ''}`,
+          missing_fields: 'Error interno: faltan campos',
+        };
+        setError(msg[json.reason] ?? `Error desconocido (${json.reason})`);
         setLoading(false);
       }
     } catch {

@@ -15,21 +15,26 @@ export async function POST(request: Request) {
   const { userId, passwordHash } = await request.json();
   if (!userId || !passwordHash) return NextResponse.json({ ok: false, reason: 'missing_fields' });
 
+  // Fetch user by ID only, compare hash in JS (avoids DB collation issues)
   const { data, error } = await db
     .from('users')
-    .select('id, name, initials, color')
-    .eq('id', userId)
-    .eq('password_hash', passwordHash);
+    .select('id, name, initials, color, password_hash')
+    .eq('id', userId);
 
   if (error) {
     return NextResponse.json({ ok: false, reason: 'db_error', detail: error.message }, { status: 500 });
   }
 
   if (!data || data.length === 0) {
+    return NextResponse.json({ ok: false, reason: 'user_not_found' });
+  }
+
+  const user = data[0];
+  if (user.password_hash !== passwordHash) {
     return NextResponse.json({ ok: false, reason: 'wrong_password' });
   }
 
-  return NextResponse.json({ ok: true, user: data[0] });
+  return NextResponse.json({ ok: true, user: { id: user.id, name: user.name, initials: user.initials, color: user.color } });
 }
 
 // GET for connectivity test
