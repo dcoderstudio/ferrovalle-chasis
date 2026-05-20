@@ -1,56 +1,47 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-const url = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(/\/$/, '');
-const serviceKey = process.env.SUPABASE_SERVICE_KEY ?? '';
-const REST = url ? `${url}/rest/v1` : '';
+function getClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+  const key = process.env.SUPABASE_SERVICE_KEY ?? '';
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 export async function GET() {
-  if (!REST || !serviceKey) {
-    return NextResponse.json([], { status: 200 });
+  const db = getClient();
+  if (!db) {
+    return NextResponse.json({ error: 'not_configured', url: !!process.env.NEXT_PUBLIC_SUPABASE_URL, key: !!process.env.SUPABASE_SERVICE_KEY }, { status: 503 });
   }
-  try {
-    const res = await fetch(`${REST}/app_data?key=eq.chassis&select=value`, {
-      headers: {
-        apikey: serviceKey,
-        Authorization: `Bearer ${serviceKey}`,
-      },
-      cache: 'no-store',
-    });
-    if (!res.ok) {
-      console.error('[API] GET error:', res.status, await res.text());
-      return NextResponse.json(null, { status: 500 });
-    }
-    const rows: { value: unknown[] }[] = await res.json();
-    return NextResponse.json(rows.length ? rows[0].value : []);
-  } catch (e) {
-    console.error('[API] GET exception:', e);
-    return NextResponse.json(null, { status: 500 });
+  const { data, error } = await db
+    .from('app_data')
+    .select('value')
+    .eq('key', 'chassis')
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message, code: error.code }, { status: 500 });
   }
+  return NextResponse.json(data?.value ?? []);
 }
 
 export async function POST(request: Request) {
-  if (!REST || !serviceKey) {
-    return NextResponse.json({ ok: false }, { status: 503 });
+  const db = getClient();
+  if (!db) {
+    return NextResponse.json({ ok: false, error: 'not_configured' }, { status: 503 });
   }
   try {
     const list = await request.json();
-    const res = await fetch(`${REST}/app_data?key=eq.chassis`, {
-      method: 'PATCH',
-      headers: {
-        apikey: serviceKey,
-        Authorization: `Bearer ${serviceKey}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify({ value: list, updated_at: new Date().toISOString() }),
-    });
-    if (!res.ok) {
-      console.error('[API] PATCH error:', res.status, await res.text());
-      return NextResponse.json({ ok: false }, { status: 500 });
+    const { error } = await db
+      .from('app_data')
+      .update({ value: list, updated_at: new Date().toISOString() })
+      .eq('key', 'chassis');
+
+    if (error) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error('[API] POST exception:', e);
-    return NextResponse.json({ ok: false }, { status: 500 });
+    return NextResponse.json({ ok: false, error: String(e) }, { status: 500 });
   }
 }
