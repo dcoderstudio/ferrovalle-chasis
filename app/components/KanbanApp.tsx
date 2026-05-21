@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 function compressImage(file: File): Promise<string> {
   return new Promise(resolve => {
@@ -421,6 +421,7 @@ export default function KanbanApp() {
             return (
               <div
                 key={col.id}
+                data-col-id={col.id}
                 className={`flex flex-col w-72 rounded-2xl border-2 transition-all duration-150 ${
                   isOver ? col.borderOver : col.border
                 }`}
@@ -459,12 +460,11 @@ export default function KanbanApp() {
                       bar={col.bar}
                       canInteract={session?.userRole !== 'diagnostico'}
                       onDragStart={() => setDraggedId(chassis.id)}
-                      onDragEnd={() => {
-                        setDraggedId(null);
-                        setDragOverCol(null);
-                      }}
+                      onDragEnd={() => { setDraggedId(null); setDragOverCol(null); }}
                       onClick={() => setSelectedChassis(chassis)}
                       onTogglePriority={() => handleTogglePriority(chassis.id)}
+                      onTouchDragOver={c => { setDraggedId(chassis.id); setDragOverCol(c); }}
+                      onTouchDrop={c => { handleDrop(c); }}
                     />
                   ))}
                   {items.length === 0 && (
@@ -539,6 +539,8 @@ function ChassisCard({
   onDragEnd,
   onClick,
   onTogglePriority,
+  onTouchDragOver,
+  onTouchDrop,
 }: {
   chassis: Chassis;
   isDragging: boolean;
@@ -548,7 +550,91 @@ function ChassisCard({
   onDragEnd: () => void;
   onClick: () => void;
   onTogglePriority: () => void;
+  onTouchDragOver: (col: ChassisStatus | null) => void;
+  onTouchDrop: (col: ChassisStatus) => void;
 }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const cbs = useRef({ onDragStart, onDragEnd, onTouchDragOver, onTouchDrop, onClick });
+  useEffect(() => { cbs.current = { onDragStart, onDragEnd, onTouchDragOver, onTouchDrop, onClick }; });
+
+  useEffect(() => {
+    if (!canInteract || !cardRef.current) return;
+    const el = cardRef.current;
+    const pressTimer = { id: null as ReturnType<typeof setTimeout> | null };
+    const state = { active: false, startX: 0, startY: 0, currentCol: null as ChassisStatus | null };
+    let clone: HTMLDivElement | null = null;
+
+    const cleanup = () => {
+      if (clone) { clone.remove(); clone = null; }
+      state.active = false;
+      state.currentCol = null;
+      cbs.current.onTouchDragOver(null);
+    };
+
+    const onStart = (e: TouchEvent) => {
+      const t = e.touches[0];
+      state.startX = t.clientX; state.startY = t.clientY;
+      pressTimer.id = setTimeout(() => {
+        state.active = true;
+        cbs.current.onDragStart();
+        if (navigator.vibrate) navigator.vibrate(50);
+        const rect = el.getBoundingClientRect();
+        clone = el.cloneNode(true) as HTMLDivElement;
+        Object.assign(clone.style, {
+          position: 'fixed', top: rect.top + 'px', left: rect.left + 'px',
+          width: rect.width + 'px', pointerEvents: 'none', zIndex: '9999',
+          opacity: '0.92', transform: 'scale(1.06) rotate(1.5deg)',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.7)', borderRadius: '12px',
+          transition: 'transform 0.15s',
+        });
+        document.body.appendChild(clone);
+      }, 400);
+    };
+
+    const onMove = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (pressTimer.id && !state.active) {
+        if (Math.abs(t.clientX - state.startX) > 8 || Math.abs(t.clientY - state.startY) > 8) {
+          clearTimeout(pressTimer.id); pressTimer.id = null;
+        }
+        return;
+      }
+      if (!state.active || !clone) return;
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      clone.style.top = (t.clientY - rect.height / 2) + 'px';
+      clone.style.left = (t.clientX - rect.width / 2) + 'px';
+      clone.style.display = 'none';
+      const target = document.elementFromPoint(t.clientX, t.clientY);
+      clone.style.display = '';
+      const colEl = target?.closest('[data-col-id]') as HTMLElement | null;
+      const colId = (colEl?.dataset.colId ?? null) as ChassisStatus | null;
+      if (colId !== state.currentCol) {
+        state.currentCol = colId;
+        cbs.current.onTouchDragOver(colId);
+      }
+    };
+
+    const onEnd = () => {
+      if (pressTimer.id) { clearTimeout(pressTimer.id); pressTimer.id = null; }
+      if (!state.active) return;
+      if (state.currentCol) cbs.current.onTouchDrop(state.currentCol);
+      cbs.current.onDragEnd();
+      cleanup();
+    };
+
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd);
+    el.addEventListener('touchcancel', onEnd);
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+      el.removeEventListener('touchcancel', onEnd);
+      cleanup();
+    };
+  }, [canInteract]);
   const isOverdue =
     chassis.commitmentDate &&
     chassis.status !== 'entregado' &&
@@ -566,6 +652,7 @@ function ChassisCard({
 
   return (
     <div
+      ref={cardRef}
       draggable={canInteract}
       onDragStart={canInteract ? onDragStart : undefined}
       onDragEnd={canInteract ? onDragEnd : undefined}
