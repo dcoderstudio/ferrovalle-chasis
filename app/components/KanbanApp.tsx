@@ -26,7 +26,7 @@ import Image from 'next/image';
 import { SIZE_LABELS } from '../services-catalog';
 import { loadChassis, saveChassis, isConfigured } from '../lib/supabase';
 import ChassisModal from './ChassisModal';
-import { PillGrid, DatePicker, type PillOption } from './FormControls';
+import { PillGrid, DatePicker, SelectDropdown, type PillOption } from './FormControls';
 import { getSession, clearSession, hashPassword, type Session } from '../lib/auth';
 import LoginScreen from './LoginScreen';
 
@@ -741,7 +741,7 @@ function AddChassisModal({
 
           <div>
             <Label text="Patio" />
-            <PillGrid value={patio} onChange={setPatio} options={PATIO_OPTIONS} allowDeselect />
+            <SelectDropdown value={patio} onChange={setPatio} options={PATIO_OPTIONS} placeholder="Seleccionar patio..." />
           </div>
 
           <div>

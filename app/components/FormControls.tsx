@@ -288,3 +288,112 @@ export function DatePicker({
     </>
   );
 }
+
+// ─── Select Dropdown ──────────────────────────────────────────────────────────
+
+export function SelectDropdown({
+  value,
+  onChange,
+  options,
+  placeholder = 'Seleccionar...',
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: PillOption[];
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        !btnRef.current?.contains(e.target as Node) &&
+        !menuRef.current?.contains(e.target as Node)
+      ) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const openMenu = () => {
+    if (!btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    const menuH = options.length * 44 + 16;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const top = spaceBelow < menuH && rect.top > menuH ? rect.top - menuH - 6 : rect.bottom + 6;
+    setPos({ top, left: rect.left, width: rect.width });
+    setOpen(true);
+  };
+
+  const selected = options.find(o => o.value === value);
+
+  const menu = (
+    <div
+      ref={menuRef}
+      style={{ position: 'fixed', top: pos.top, left: pos.left, width: pos.width, zIndex: 9999, background: '#131c2e' }}
+      className="rounded-2xl border border-white/[0.12] shadow-2xl shadow-black/70 p-2 flex flex-col gap-1"
+    >
+      {value && (
+        <button
+          type="button"
+          onClick={() => { onChange(''); setOpen(false); }}
+          className="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-400 hover:bg-white/[0.04] transition-all"
+        >
+          Sin selección
+        </button>
+      )}
+      {options.map(opt => {
+        const sel = opt.value === value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => { onChange(opt.value); setOpen(false); }}
+            className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-between ${
+              sel
+                ? 'text-violet-200'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.05]'
+            }`}
+            style={sel ? { background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.1))' } : undefined}
+          >
+            <span>{opt.label}</span>
+            {sel && (
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-violet-400 shrink-0">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+              </svg>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={openMenu}
+        className={`w-full bg-[#1a2235] border rounded-xl px-3 py-2.5 text-sm flex items-center justify-between gap-2 transition-all hover:border-white/[0.15] ${
+          open ? 'border-violet-500/40 ring-2 ring-violet-500/20' : 'border-white/[0.08]'
+        }`}
+      >
+        <span className={selected ? 'text-white font-medium' : 'text-slate-700'}>
+          {selected?.label ?? placeholder}
+        </span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+          className={`w-4 h-4 shrink-0 transition-transform ${open ? 'rotate-180 text-violet-400' : 'text-slate-600'}`}>
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+      {open && mounted && createPortal(menu, document.body)}
+    </>
+  );
+}

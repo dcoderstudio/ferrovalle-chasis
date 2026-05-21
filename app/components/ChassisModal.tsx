@@ -32,7 +32,7 @@ import {
   CONDITION_LABELS,
   type Service,
 } from '../services-catalog';
-import { PillGrid, DatePicker, type PillOption } from './FormControls';
+import { PillGrid, DatePicker, SelectDropdown, type PillOption } from './FormControls';
 
 const SIZE_OPTIONS: PillOption[] = [
   { value: 'pequeño', label: '20 ft' },
@@ -503,11 +503,11 @@ function InfoTab({ data, update }: { data: Chassis; update: (f: Partial<Chassis>
         />
       </Field>
       <Field label="Patio">
-        <PillGrid
+        <SelectDropdown
           value={data.patio ?? ''}
           onChange={v => update({ patio: v })}
           options={PATIO_OPTIONS}
-          allowDeselect
+          placeholder="Seleccionar patio..."
         />
       </Field>
       <Field label="Fecha Compromiso de Entrega">
