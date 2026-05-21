@@ -2,23 +2,27 @@
 
 import { useState } from 'react';
 
-// Resize + compress image to JPEG, max 1200px wide, quality 0.75
 function compressImage(file: File): Promise<string> {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
+    const timeout = setTimeout(() => {
+      URL.revokeObjectURL(url);
+      reject(new Error('timeout'));
+    }, 15000);
     img.onload = () => {
+      clearTimeout(timeout);
       const MAX = 1200;
       let { width, height } = img;
       if (width > MAX) { height = Math.round(height * MAX / width); width = MAX; }
       if (height > MAX) { width = Math.round(width * MAX / height); height = MAX; }
       const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = width; canvas.height = height;
       canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
       URL.revokeObjectURL(url);
       resolve(canvas.toDataURL('image/jpeg', 0.75));
     };
+    img.onerror = () => { clearTimeout(timeout); URL.revokeObjectURL(url); reject(new Error('load error')); };
     img.src = url;
   });
 }
@@ -125,6 +129,7 @@ export default function ChassisModal({
   userName?: string;
 }) {
   const isDiagnostico = userRole === 'diagnostico';
+  const [notice, setNotice] = useState<string>('');
   const [data, setData] = useState<Chassis>({
     ...chassis,
     diagnosedBy: chassis.diagnosedBy || (isDiagnostico ? userName : ''),
@@ -143,15 +148,37 @@ export default function ChassisModal({
     setHasChanges(false);
   };
 
+  const showNotice = (msg: string) => {
+    setNotice(msg);
+    setTimeout(() => setNotice(''), 4000);
+  };
+
   const handlePhotoUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
     field: 'photosBefore' | 'photosDetail' | 'photosAfter'
   ) => {
     const files = e.target.files;
     if (!files || !files.length) return;
-    Promise.all(Array.from(files).map(compressImage)).then(newPhotos => {
-      update({ [field]: [...data[field], ...newPhotos].slice(0, 6) });
-    });
+    const MAX = 6;
+    const current = data[field].length;
+    const available = MAX - current;
+    if (available <= 0) {
+      showNotice('Ya tienes 6 fotos en esta sección. Elimina alguna para agregar más.');
+      e.target.value = '';
+      return;
+    }
+    const selected = Array.from(files);
+    const toProcess = selected.slice(0, available);
+    if (selected.length > available) {
+      showNotice(`Solo se agregarán ${available} foto${available !== 1 ? 's' : ''} (límite de 6 por sección).`);
+    }
+    Promise.all(toProcess.map(f => compressImage(f).catch(() => null)))
+      .then(results => {
+        const valid = results.filter(Boolean) as string[];
+        const failed = results.length - valid.length;
+        if (failed > 0) showNotice(`${failed} foto${failed !== 1 ? 's' : ''} no se pudo${failed !== 1 ? 'ieron' : ''} procesar.`);
+        if (valid.length > 0) update({ [field]: [...data[field], ...valid] });
+      });
     e.target.value = '';
   };
 
@@ -395,6 +422,15 @@ export default function ChassisModal({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6">
+          {notice && (
+            <div className="mb-4 flex items-center gap-2 px-4 py-2.5 rounded-xl border border-amber-400/30 text-amber-300 text-xs font-medium"
+              style={{ background: 'rgba(251,191,36,0.08)' }}>
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0">
+                <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd"/>
+              </svg>
+              {notice}
+            </div>
+          )}
           {activeTab === 'info' && <InfoTab data={data} update={update} />}
           {activeTab === 'avance' && (
             <AvanceTab data={data} update={update} />

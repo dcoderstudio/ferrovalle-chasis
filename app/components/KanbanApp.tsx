@@ -3,21 +3,26 @@
 import { useState, useEffect, useRef } from 'react';
 
 function compressImage(file: File): Promise<string> {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const img = document.createElement('img') as HTMLImageElement;
     const url = URL.createObjectURL(file);
+    const timeout = setTimeout(() => {
+      URL.revokeObjectURL(url);
+      reject(new Error('timeout'));
+    }, 15000);
     img.onload = () => {
+      clearTimeout(timeout);
       const MAX = 1200;
       let { width, height } = img;
       if (width > MAX) { height = Math.round(height * MAX / width); width = MAX; }
       if (height > MAX) { width = Math.round(width * MAX / height); height = MAX; }
       const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = width; canvas.height = height;
       canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
       URL.revokeObjectURL(url);
       resolve(canvas.toDataURL('image/jpeg', 0.75));
     };
+    img.onerror = () => { clearTimeout(timeout); URL.revokeObjectURL(url); reject(new Error('load error')); };
     img.src = url;
   });
 }
@@ -190,11 +195,16 @@ export default function KanbanApp() {
   }, []);
 
   useEffect(() => {
-    if (!dataLoaded) return; // no guardar hasta que los datos estén cargados
+    if (!dataLoaded) return;
+    // localStorage: guardar inmediatamente (rápido y local)
     try { localStorage.setItem('ferrovalle-chassis', JSON.stringify(chassisList)); } catch {}
     if (!isConfigured()) return;
+    // Supabase: debounce 1.5s para no enviar en cada tecla
     setSyncStatus('syncing');
-    saveChassis(chassisList).then(ok => setSyncStatus(ok ? 'synced' : 'error'));
+    const timer = setTimeout(() => {
+      saveChassis(chassisList).then(ok => setSyncStatus(ok ? 'synced' : 'error'));
+    }, 1500);
+    return () => clearTimeout(timer);
   }, [chassisList, dataLoaded]);
 
   const handleAddChassis = (data: Omit<Chassis, 'id' | 'createdAt'>) => {
