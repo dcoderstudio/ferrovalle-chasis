@@ -15,8 +15,6 @@ export type Session = {
   userRole: 'admin' | 'diagnostico';
 };
 
-const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 horas
-
 export async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
@@ -26,17 +24,14 @@ export async function hashPassword(password: string): Promise<string> {
     .join('');
 }
 
+// sessionStorage: session lives only while the browser tab is open.
+// Closing the tab or browser always requires logging in again.
 export function getSession(): Session | null {
   if (typeof window === 'undefined') return null;
   try {
-    const s = localStorage.getItem('ferrovalle-session');
+    const s = sessionStorage.getItem('ferrovalle-session');
     if (!s) return null;
     const parsed = JSON.parse(s);
-    // Expire sessions older than 8 hours
-    if (parsed.createdAt && Date.now() - parsed.createdAt > SESSION_TTL_MS) {
-      localStorage.removeItem('ferrovalle-session');
-      return null;
-    }
     return { ...parsed, userRole: parsed.userRole ?? 'admin' };
   } catch {
     return null;
@@ -44,12 +39,11 @@ export function getSession(): Session | null {
 }
 
 export function setSession(session: Session): void {
-  localStorage.setItem('ferrovalle-session', JSON.stringify({
-    ...session,
-    createdAt: Date.now(),
-  }));
+  // Also clear any old localStorage session from previous versions
+  try { localStorage.removeItem('ferrovalle-session'); } catch {}
+  sessionStorage.setItem('ferrovalle-session', JSON.stringify(session));
 }
 
 export function clearSession(): void {
-  localStorage.removeItem('ferrovalle-session');
+  sessionStorage.removeItem('ferrovalle-session');
 }
