@@ -28,7 +28,7 @@ function compressImage(file: File): Promise<string> {
 }
 import type { Chassis, ChassisStatus, ChassisSize, ChassisCondition } from '../types';
 import Image from 'next/image';
-import { SIZE_LABELS } from '../services-catalog';
+import { SIZE_LABELS, SERVICES } from '../services-catalog';
 import { loadChassis, saveChassis, isConfigured } from '../lib/supabase';
 import ChassisModal from './ChassisModal';
 import { PillGrid, DatePicker, SelectDropdown, type PillOption } from './FormControls';
@@ -658,9 +658,14 @@ function ChassisCard({
     });
   };
 
-  const totalServices = chassis.selectedServices.length;
+  const effectiveServices = chassis.selectedServices.filter(sel => {
+    const svc = SERVICES.find(s => s.id === sel.serviceId);
+    if (!svc) return false;
+    return svc.subOptions ? (sel.selectedSubOptions?.length ?? 0) > 0 : sel.quantity > 0;
+  });
+  const totalServices = effectiveServices.length;
   const completedCount = (chassis.completedServices ?? []).filter(id =>
-    chassis.selectedServices.some(s => s.serviceId === id)
+    effectiveServices.some(s => s.serviceId === id)
   ).length;
   const pct = totalServices > 0 ? Math.round((completedCount / totalServices) * 100) : 0;
 

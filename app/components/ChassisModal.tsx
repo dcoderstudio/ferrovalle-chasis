@@ -249,9 +249,14 @@ export default function ChassisModal({
     return sum + serviceUnitPrice(svc) * selQty(sel, svc);
   }, 0);
 
-  const headerTotal = data.selectedServices.length;
+  const effectiveServices = data.selectedServices.filter(sel => {
+    const svc = SERVICES.find(s => s.id === sel.serviceId);
+    if (!svc) return false;
+    return svc.subOptions ? (sel.selectedSubOptions?.length ?? 0) > 0 : sel.quantity > 0;
+  });
+  const headerTotal = effectiveServices.length;
   const headerDone = (data.completedServices ?? []).filter(id =>
-    data.selectedServices.some(s => s.serviceId === id)
+    effectiveServices.some(s => s.serviceId === id)
   ).length;
   const headerPct = headerTotal > 0 ? Math.round((headerDone / headerTotal) * 100) : 0;
 
@@ -1318,8 +1323,15 @@ function StatusStepper({ status }: { status: ChassisStatus }) {
 // ─── Avance Tab ───────────────────────────────────────────────────────────────
 
 function AvanceTab({ data, update }: { data: Chassis; update: (f: Partial<Chassis>) => void }) {
-  const selected = data.selectedServices;
   const completed = data.completedServices ?? [];
+
+  // Only show services with at least one effective unit (sub-option services with 0 selections are excluded)
+  const selected = data.selectedServices.filter(sel => {
+    const svc = SERVICES.find(s => s.id === sel.serviceId);
+    if (!svc) return false;
+    return svc.subOptions ? (sel.selectedSubOptions?.length ?? 0) > 0 : sel.quantity > 0;
+  });
+
   const total = selected.length;
   const done = selected.filter(s => completed.includes(s.serviceId)).length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
