@@ -12,7 +12,7 @@ function compressImage(file: File): Promise<string> {
     }, 15000);
     img.onload = () => {
       clearTimeout(timeout);
-      const MAX = 1200;
+      const MAX = 900;
       let { width, height } = img;
       if (width > MAX) { height = Math.round(height * MAX / width); width = MAX; }
       if (height > MAX) { width = Math.round(width * MAX / height); height = MAX; }
@@ -20,7 +20,7 @@ function compressImage(file: File): Promise<string> {
       canvas.width = width; canvas.height = height;
       canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
       URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL('image/jpeg', 0.75));
+      resolve(canvas.toDataURL('image/jpeg', 0.70));
     };
     img.onerror = () => { clearTimeout(timeout); URL.revokeObjectURL(url); reject(new Error('load error')); };
     img.src = url;
