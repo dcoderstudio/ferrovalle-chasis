@@ -659,6 +659,10 @@ function ChassisCard({
   };
 
   const totalServices = chassis.selectedServices.length;
+  const completedCount = (chassis.completedServices ?? []).filter(id =>
+    chassis.selectedServices.some(s => s.serviceId === id)
+  ).length;
+  const pct = totalServices > 0 ? Math.round((completedCount / totalServices) * 100) : 0;
 
   return (
     <div
@@ -721,16 +725,26 @@ function ChassisCard({
           </div>
         )}
 
+        {/* Progress bar */}
+        {totalServices > 0 && (
+          <div className="mb-2.5">
+            <div className="flex items-center justify-between text-[10px] mb-1">
+              <span className="text-slate-600">{completedCount} de {totalServices} servicios</span>
+              <span className={pct === 100 ? 'text-emerald-400 font-bold' : 'text-slate-500'}>{pct}%</span>
+            </div>
+            <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{ width: `${pct}%`, background: pct === 100 ? '#4ade80' : pct > 50 ? '#f97316' : '#60a5fa' }}
+              />
+            </div>
+          </div>
+        )}
         {/* Footer */}
-        <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.05]">
+        <div className="flex items-center pt-2.5 border-t border-white/[0.05]">
           <span className="text-xs text-slate-700">
             {SIZE_LABELS[chassis.size]?.split(' ')[0] ?? chassis.size}
           </span>
-          {totalServices > 0 && (
-            <span className="text-xs bg-orange-500/15 text-orange-400 font-medium px-2 py-0.5 rounded-full">
-              {totalServices} servicio{totalServices !== 1 ? 's' : ''}
-            </span>
-          )}
         </div>
       </div>
     </div>
@@ -801,19 +815,19 @@ function AddChassisModal({
       onClick={handleBackdrop}
     >
       <div
-        className="rounded-2xl shadow-2xl w-full max-w-sm border border-white/[0.08] overflow-hidden"
+        className="rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] flex flex-col border border-white/[0.08] overflow-hidden"
         style={{ background: '#0e1420' }}
         onClick={e => e.stopPropagation()}
       >
         <div
-          className="px-5 py-4 border-b border-white/[0.06]"
+          className="px-5 py-4 border-b border-white/[0.06] shrink-0"
           style={{ background: 'linear-gradient(135deg, #1e0a3c 0%, #0c1e4a 100%)' }}
         >
           <h2 className="text-white font-bold text-base tracking-tight">Registrar nuevo chasis</h2>
           <p className="text-purple-300/50 text-xs mt-0.5">Información inicial del chasis</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto flex-1">
           <div>
             <Label text="Número de Chasis" required />
             <input
