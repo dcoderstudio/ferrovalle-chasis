@@ -242,6 +242,12 @@ export default function ChassisModal({
     return sum + serviceUnitPrice(svc) * selQty(sel, svc);
   }, 0);
 
+  const headerTotal = data.selectedServices.length;
+  const headerDone = (data.completedServices ?? []).filter(id =>
+    data.selectedServices.some(s => s.serviceId === id)
+  ).length;
+  const headerPct = headerTotal > 0 ? Math.round((headerDone / headerTotal) * 100) : 0;
+
   const TABS: Array<{ id: Tab; label: string }> = isDiagnostico
     ? [{ id: 'fotos', label: 'Fotos' }, { id: 'diagnostico', label: 'Revisión' }]
     : [
@@ -399,19 +405,24 @@ export default function ChassisModal({
           className="px-6 py-5 shrink-0 border-b border-white/[0.06]"
           style={{ background: 'linear-gradient(135deg, #1e0a3c 0%, #0c1e4a 100%)' }}
         >
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-white font-bold text-xl tracking-tight">
-                Chasis #{data.chassisNumber || '—'}
-              </h2>
-              <p className="text-purple-300/60 text-sm mt-0.5">
-                {isDiagnostico
-                  ? `${SIZE_LABELS[data.size] ?? data.size} · ${CONDITION_LABELS[data.condition] ?? data.condition}`
-                  : `${data.clientName || 'Sin cliente asignado'}${data.purchaseOrder ? ` · OC: ${data.purchaseOrder}` : ''}`
-                }
-              </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 min-w-0">
+              {headerTotal > 0 && !isDiagnostico && (
+                <MiniProgressCircle pct={headerPct} done={headerDone} total={headerTotal} />
+              )}
+              <div className="min-w-0">
+                <h2 className="text-white font-bold text-xl tracking-tight">
+                  Chasis #{data.chassisNumber || '—'}
+                </h2>
+                <p className="text-purple-300/60 text-sm mt-0.5">
+                  {isDiagnostico
+                    ? `${SIZE_LABELS[data.size] ?? data.size} · ${CONDITION_LABELS[data.condition] ?? data.condition}`
+                    : `${data.clientName || 'Sin cliente asignado'}${data.purchaseOrder ? ` · OC: ${data.purchaseOrder}` : ''}`
+                  }
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {hasChanges && (
                 <button
                   onClick={handleSave}
@@ -1435,6 +1446,29 @@ function ProgressCircle({ pct, done, total }: { pct: number; done: number; total
       <div className="absolute flex flex-col items-center">
         <span className="text-3xl font-bold text-white">{pct}%</span>
         <span className="text-xs text-slate-500 mt-0.5">{done} de {total}</span>
+      </div>
+    </div>
+  );
+}
+
+function MiniProgressCircle({ pct, done, total }: { pct: number; done: number; total: number }) {
+  const r = 50;
+  const circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+  const color = pct === 100 ? '#4ade80' : pct > 50 ? '#f97316' : '#60a5fa';
+  return (
+    <div className="relative w-16 h-16 flex items-center justify-center shrink-0" title={`${done} de ${total} servicios completados`}>
+      <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10" />
+        <circle cx="60" cy="60" r={r} fill="none" stroke={color}
+          strokeWidth="10" strokeLinecap="round"
+          strokeDasharray={`${dash} ${circ}`}
+          style={{ transition: 'stroke-dasharray 0.5s ease, stroke 0.3s ease' }}
+        />
+      </svg>
+      <div className="absolute flex flex-col items-center leading-none">
+        <span className="text-sm font-bold text-white">{pct}%</span>
+        <span className="text-[9px] text-slate-500 mt-0.5">{done}/{total}</span>
       </div>
     </div>
   );
