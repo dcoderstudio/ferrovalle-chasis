@@ -671,10 +671,10 @@ function ChassisCard({
       onDragStart={canInteract ? onDragStart : undefined}
       onDragEnd={canInteract ? onDragEnd : undefined}
       onClick={onClick}
-      className={`rounded-xl border border-white/[0.07] overflow-hidden cursor-pointer select-none transition-all ${
+      className={`rounded-xl border overflow-hidden cursor-pointer select-none transition-all ${
         isDragging
-          ? 'opacity-40 scale-95'
-          : 'hover:border-white/[0.15] hover:bg-[#1a2235]'
+          ? 'border-white/[0.20] scale-95'
+          : 'border-white/[0.07] hover:border-white/[0.15] hover:bg-[#1a2235]'
       }`}
       style={{ background: '#141b2d' }}
     >
