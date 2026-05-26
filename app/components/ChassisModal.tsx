@@ -31,7 +31,6 @@ import type { Chassis, ChassisStatus, ChassisSize, ChassisCondition } from '../t
 import {
   SERVICES,
   CATEGORIES,
-  SIZE_MULTIPLIERS,
   SIZE_LABELS,
   CONDITION_LABELS,
   type Service,
@@ -203,13 +202,44 @@ export default function ChassisModal({
     });
   };
 
-  const sizeMultiplier = SIZE_MULTIPLIERS[data.size] ?? 1;
-  const serviceUnitPrice = (svc: Service) =>
-    Math.round(svc.basePrice * (svc.affectedBySize ? sizeMultiplier : 1));
+  const toggleSubOption = (serviceId: string, subOption: string) => {
+    const existing = data.selectedServices.find(s => s.serviceId === serviceId);
+    if (existing) {
+      const current = existing.selectedSubOptions ?? [];
+      const next = current.includes(subOption)
+        ? current.filter(s => s !== subOption)
+        : [...current, subOption];
+      if (next.length === 0) {
+        update({ selectedServices: data.selectedServices.filter(s => s.serviceId !== serviceId) });
+      } else {
+        update({
+          selectedServices: data.selectedServices.map(s =>
+            s.serviceId === serviceId ? { ...s, selectedSubOptions: next, quantity: next.length } : s
+          ),
+        });
+      }
+    } else {
+      update({
+        selectedServices: [
+          ...data.selectedServices,
+          { serviceId, quantity: 1, selectedSubOptions: [subOption] },
+        ],
+      });
+    }
+  };
+
+  const serviceUnitPrice = (svc: Service): number => {
+    if (svc.priceBySize) return svc.priceBySize[data.size] ?? svc.priceBySize['pequeño'] ?? 0;
+    return svc.basePrice;
+  };
+
+  const selQty = (sel: { quantity: number; selectedSubOptions?: string[] }, svc: Service) =>
+    svc.subOptions ? (sel.selectedSubOptions?.length ?? 0) : sel.quantity;
 
   const quotedTotal = data.selectedServices.reduce((sum, sel) => {
     const svc = SERVICES.find(s => s.id === sel.serviceId);
-    return svc ? sum + serviceUnitPrice(svc) * sel.quantity : sum;
+    if (!svc) return sum;
+    return sum + serviceUnitPrice(svc) * selQty(sel, svc);
   }, 0);
 
   const TABS: Array<{ id: Tab; label: string }> = isDiagnostico
@@ -229,7 +259,13 @@ export default function ChassisModal({
     const selectedList = data.selectedServices.map(sel => {
       const svc = SERVICES.find(s => s.id === sel.serviceId);
       if (!svc) return null;
-      return { name: svc.name, quantity: sel.quantity, total: serviceUnitPrice(svc) * sel.quantity };
+      const qty = selQty(sel, svc);
+      if (qty === 0) return null;
+      let name = svc.name;
+      if (svc.subOptions && sel.selectedSubOptions && sel.selectedSubOptions.length > 0) {
+        name += ` — ${sel.selectedSubOptions.join(', ')}`;
+      }
+      return { name, quantity: qty, total: serviceUnitPrice(svc) * qty };
     }).filter(Boolean);
 
     const techName = isDiagnostico ? userName : (data.diagnosedBy ?? '');
@@ -443,7 +479,9 @@ export default function ChassisModal({
               data={data}
               toggleService={toggleService}
               updateQty={updateQty}
+              toggleSubOption={toggleSubOption}
               serviceUnitPrice={serviceUnitPrice}
+              selQty={selQty}
               quotedTotal={quotedTotal}
               onGeneratePDF={generateDiagnosisPDF}
               hidePrice={isDiagnostico}
@@ -800,7 +838,9 @@ function DiagnosticoTab({
   data,
   toggleService,
   updateQty,
+  toggleSubOption,
   serviceUnitPrice,
+  selQty,
   quotedTotal,
   onGeneratePDF,
   hidePrice = false,
@@ -810,7 +850,9 @@ function DiagnosticoTab({
   data: Chassis;
   toggleService: (id: string) => void;
   updateQty: (id: string, qty: number) => void;
+  toggleSubOption: (id: string, sub: string) => void;
   serviceUnitPrice: (svc: Service) => number;
+  selQty: (sel: { quantity: number; selectedSubOptions?: string[] }, svc: Service) => number;
   quotedTotal: number;
   onGeneratePDF: () => void;
   hidePrice?: boolean;
@@ -818,17 +860,115 @@ function DiagnosticoTab({
   onUpdate?: (fields: Partial<Chassis>) => void;
 }) {
   const [search, setSearch] = useState('');
-  const sizeMultiplier = SIZE_MULTIPLIERS[data.size] ?? 1;
+  const [expandedService, setExpandedService] = useState<string | null>(null);
 
   const q = search.toLowerCase();
-  const filtered = q
-    ? SERVICES.filter(s => s.name.toLowerCase().includes(q))
-    : null;
+  const filtered = q ? SERVICES.filter(s => s.name.toLowerCase().includes(q)) : null;
 
   const renderService = (svc: Service) => {
     const sel = data.selectedServices.find(s => s.serviceId === svc.id);
     const unitPrice = serviceUnitPrice(svc);
-    const subtotal = sel ? unitPrice * sel.quantity : 0;
+
+    // ── Services with sub-options ─────────────────────────────────────────────
+    if (svc.subOptions && svc.subOptions.length > 0) {
+      const selectedSubs = sel?.selectedSubOptions ?? [];
+      const isAnySelected = selectedSubs.length > 0;
+      const isExpanded = expandedService === svc.id;
+
+      return (
+        <div key={svc.id} className="rounded-xl overflow-hidden">
+          {/* Header row */}
+          <div
+            className={`flex items-center gap-2.5 p-2.5 border cursor-pointer transition-all select-none ${
+              isAnySelected
+                ? 'border-orange-400/25 bg-orange-400/[0.06]'
+                : 'border-white/[0.05] hover:border-white/10'
+            } ${isExpanded ? 'rounded-t-xl rounded-b-none' : 'rounded-xl'}`}
+            style={!isAnySelected ? { background: '#141b2d' } : undefined}
+            onClick={() => setExpandedService(isExpanded ? null : svc.id)}
+          >
+            <svg
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+              className={`w-3.5 h-3.5 shrink-0 transition-transform ${
+                isExpanded ? 'rotate-90 text-orange-400' : isAnySelected ? 'text-orange-300' : 'text-slate-600'
+              }`}
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className={`text-xs font-medium leading-tight ${isAnySelected ? 'text-orange-200' : 'text-slate-300'}`}>
+                {svc.name}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {isAnySelected && (
+                <span className="text-xs font-bold text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded-full">
+                  {selectedSubs.length}×
+                </span>
+              )}
+              {!hidePrice && (
+                <p className="text-xs text-slate-600 whitespace-nowrap">{formatCurrency(unitPrice)} c/u</p>
+              )}
+            </div>
+          </div>
+
+          {/* Sub-options panel */}
+          {isExpanded && (
+            <div
+              className="border border-t-0 rounded-b-xl p-3 space-y-2"
+              style={{ background: '#0c1220', borderColor: isAnySelected ? 'rgba(251,146,60,0.2)' : 'rgba(255,255,255,0.05)' }}
+            >
+              {svc.subOptions.map(opt => {
+                const isChecked = selectedSubs.includes(opt);
+                return (
+                  <div
+                    key={opt}
+                    className="flex items-center gap-2.5 cursor-pointer group"
+                    onClick={e => { e.stopPropagation(); toggleSubOption(svc.id, opt); }}
+                  >
+                    <div
+                      className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all ${
+                        isChecked
+                          ? 'bg-orange-500 border-orange-500'
+                          : 'bg-transparent border-slate-600 group-hover:border-orange-400/60'
+                      }`}
+                    >
+                      {isChecked && (
+                        <svg viewBox="0 0 10 10" fill="none" stroke="white" strokeWidth="2.5" className="w-2.5 h-2.5">
+                          <polyline points="1.5 5 4 7.5 8.5 2" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className={`text-xs font-medium flex-1 ${isChecked ? 'text-orange-200' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                      {opt}
+                    </span>
+                    {!hidePrice && (
+                      <span className="text-xs text-slate-600 whitespace-nowrap">{formatCurrency(unitPrice)}</span>
+                    )}
+                  </div>
+                );
+              })}
+              {isAnySelected && !hidePrice && (
+                <div className="pt-2 mt-1 border-t border-white/[0.05] flex justify-between items-center">
+                  <span className="text-xs text-slate-600">
+                    {selectedSubs.length} seleccionado{selectedSubs.length !== 1 ? 's' : ''}
+                  </span>
+                  <span className="text-xs font-bold text-orange-400">
+                    {formatCurrency(unitPrice * selectedSubs.length)}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── Regular services ──────────────────────────────────────────────────────
+    const qty = selQty(sel ?? { quantity: 0 }, svc);
+    const subtotal = sel ? unitPrice * qty : 0;
+    const isPriceVariable = !!svc.priceBySize;
+
     return (
       <div
         key={svc.id}
@@ -847,15 +987,9 @@ function DiagnosticoTab({
           <p className={`text-xs font-medium leading-tight ${sel ? 'text-orange-200' : 'text-slate-300'}`}>
             {svc.name}
           </p>
-          {!hidePrice && (
-            <span
-              className={`inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                svc.affectedBySize
-                  ? 'bg-blue-500/15 text-blue-400'
-                  : 'bg-white/[0.06] text-slate-600'
-              }`}
-            >
-              {svc.affectedBySize ? '×Tamaño' : 'Precio fijo'}
+          {isPriceVariable && !hidePrice && (
+            <span className="inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400">
+              Precio por tamaño
             </span>
           )}
         </div>
@@ -879,6 +1013,12 @@ function DiagnosticoTab({
       </div>
     );
   };
+
+  const activeCount = data.selectedServices.filter(sel => {
+    const svc = SERVICES.find(s => s.id === sel.serviceId);
+    if (!svc) return false;
+    return selQty(sel, svc) > 0;
+  }).length;
 
   return (
     <div className="space-y-4">
@@ -921,13 +1061,14 @@ function DiagnosticoTab({
           </div>
         </div>
       )}
-      {/* Size indicator */}
-      {!hidePrice && (
-        <div className="flex items-center gap-2 text-[11px] text-slate-500 px-1">
-          <span className="text-blue-400 font-semibold">●</span> ×Tamaño: el precio varía según 20 ft / 40 ft (×{sizeMultiplier}) &nbsp;·&nbsp;
-          <span className="text-slate-600 font-semibold">●</span> Precio fijo: independiente del tamaño
-        </div>
-      )}
+
+      {/* Hint for sub-option services */}
+      <div className="flex items-center gap-2 text-[11px] text-slate-600 px-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 text-orange-400/60 shrink-0">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+        Los servicios con flecha tienen sub-opciones — toca para expandir y seleccionar
+      </div>
 
       {/* Search */}
       <div className="relative">
@@ -971,19 +1112,18 @@ function DiagnosticoTab({
         </div>
       )}
 
-      {/* Sticky bottom bar — always visible */}
+      {/* Sticky bottom bar */}
       <div className="sticky bottom-0 flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
         style={{
           background: 'rgba(15,20,32,0.97)',
           backdropFilter: 'blur(8px)',
           borderColor: hidePrice ? 'rgba(14,165,233,0.2)' : 'rgba(249,115,22,0.2)',
         }}>
-        {/* Left: count / total */}
         <div className="min-w-0">
-          {data.selectedServices.length > 0 ? (
+          {activeCount > 0 ? (
             <>
               <p className="text-xs text-slate-500">
-                {data.selectedServices.length} servicio{data.selectedServices.length !== 1 ? 's' : ''}
+                {activeCount} servicio{activeCount !== 1 ? 's' : ''}
               </p>
               {!hidePrice && quotedTotal > 0 && (
                 <p className="text-lg font-bold text-orange-400 leading-tight">{formatCurrency(quotedTotal)}</p>
@@ -993,7 +1133,6 @@ function DiagnosticoTab({
             <p className="text-xs text-slate-600">Sin servicios seleccionados</p>
           )}
         </div>
-        {/* Right: PDF button */}
         <button
           onClick={onGeneratePDF}
           className="flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold transition-all hover:opacity-90 active:scale-95 shrink-0"
@@ -1026,7 +1165,23 @@ function CotizacionTab({
   serviceUnitPrice: (svc: Service) => number;
   quotedTotal: number;
 }) {
-  if (data.selectedServices.length === 0) {
+  const activeItems = data.selectedServices
+    .map(sel => {
+      const svc = SERVICES.find(s => s.id === sel.serviceId);
+      if (!svc) return null;
+      const qty = svc.subOptions ? (sel.selectedSubOptions?.length ?? 0) : sel.quantity;
+      if (qty === 0) return null;
+      return { sel, svc, qty, unitPrice: serviceUnitPrice(svc), subtotal: serviceUnitPrice(svc) * qty };
+    })
+    .filter(Boolean) as Array<{
+      sel: (typeof data.selectedServices)[0];
+      svc: Service;
+      qty: number;
+      unitPrice: number;
+      subtotal: number;
+    }>;
+
+  if (activeItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-4">
@@ -1051,21 +1206,23 @@ function CotizacionTab({
         Servicios seleccionados
       </p>
 
-      {data.selectedServices.map(sel => {
-        const svc = SERVICES.find(s => s.id === sel.serviceId);
-        if (!svc) return null;
-        const unitPrice = serviceUnitPrice(svc);
-        const subtotal = unitPrice * sel.quantity;
+      {activeItems.map(({ sel, svc, qty, unitPrice, subtotal }) => {
+        const subLabel = svc.subOptions && sel.selectedSubOptions && sel.selectedSubOptions.length > 0
+          ? sel.selectedSubOptions.join(', ')
+          : null;
         return (
           <div
             key={sel.serviceId}
-            className="flex items-center justify-between p-4 rounded-xl border border-white/[0.06]"
+            className="flex items-start justify-between p-4 rounded-xl border border-white/[0.06]"
             style={{ background: '#141b2d' }}
           >
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-white font-semibold text-sm">{svc.name}</p>
+              {subLabel && (
+                <p className="text-orange-300/70 text-xs mt-0.5 font-medium">{subLabel}</p>
+              )}
               <p className="text-slate-500 text-xs mt-0.5">
-                {sel.quantity} × {formatCurrency(unitPrice)}
+                {qty} × {formatCurrency(unitPrice)}
               </p>
             </div>
             <p className="text-orange-400 font-bold text-sm shrink-0 ml-4">
@@ -1084,7 +1241,7 @@ function CotizacionTab({
           <div>
             <p className="text-sm font-semibold text-white">Total cotizado</p>
             <p className="text-xs text-slate-500 mt-0.5">
-              {data.selectedServices.length} servicio{data.selectedServices.length !== 1 ? 's' : ''}
+              {activeItems.length} servicio{activeItems.length !== 1 ? 's' : ''}
             </p>
           </div>
           <p className="text-3xl font-bold text-orange-400">{formatCurrency(quotedTotal)}</p>
@@ -1210,6 +1367,10 @@ function AvanceTab({ data, update }: { data: Chassis; update: (f: Partial<Chassi
             const svc = SERVICES.find(s => s.id === sel.serviceId);
             if (!svc) return null;
             const isDone = completed.includes(sel.serviceId);
+            const qty = svc.subOptions ? (sel.selectedSubOptions?.length ?? sel.quantity) : sel.quantity;
+            const subLabel = svc.subOptions && sel.selectedSubOptions && sel.selectedSubOptions.length > 0
+              ? sel.selectedSubOptions.join(', ')
+              : null;
             return (
               <button
                 key={sel.serviceId}
@@ -1233,16 +1394,19 @@ function AvanceTab({ data, update }: { data: Chassis; update: (f: Partial<Chassi
                     </svg>
                   )}
                 </div>
-                <span
-                  className={`text-sm font-medium flex-1 transition-all ${
-                    isDone ? 'line-through opacity-50' : ''
-                  }`}
-                  style={{ color: isDone ? '#4ade80' : '#cbd5e1' }}
-                >
-                  {svc.name}
-                </span>
-                {sel.quantity > 1 && (
-                  <span className="text-xs text-slate-600 shrink-0">×{sel.quantity}</span>
+                <div className="flex-1 min-w-0">
+                  <span
+                    className={`text-sm font-medium block truncate transition-all ${isDone ? 'line-through opacity-50' : ''}`}
+                    style={{ color: isDone ? '#4ade80' : '#cbd5e1' }}
+                  >
+                    {svc.name}
+                  </span>
+                  {subLabel && (
+                    <span className="text-xs text-slate-500 block truncate">{subLabel}</span>
+                  )}
+                </div>
+                {qty > 1 && (
+                  <span className="text-xs text-slate-600 shrink-0">×{qty}</span>
                 )}
               </button>
             );

@@ -12,6 +12,7 @@ export type ChassisCondition = 'bueno' | 'moderado' | 'severo' | 'critico';
 export type SelectedService = {
   serviceId: string;
   quantity: number;
+  selectedSubOptions?: string[];
 };
 
 export type Chassis = {
