@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 function compressImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -135,16 +135,23 @@ export default function ChassisModal({
     diagnosedAt: chassis.diagnosedAt || (isDiagnostico ? new Date().toISOString().split('T')[0] : ''),
   });
   const [activeTab, setActiveTab] = useState<Tab>(isDiagnostico ? 'diagnostico' : 'info');
-  const [hasChanges, setHasChanges] = useState(false);
+  const onUpdateRef = useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
+  const mounted = useRef(false);
 
   const update = (fields: Partial<Chassis>) => {
     setData(prev => ({ ...prev, ...fields }));
-    setHasChanges(true);
   };
 
-  const handleSave = () => {
-    onUpdate(data);
-    setHasChanges(false);
+  useEffect(() => {
+    if (!mounted.current) { mounted.current = true; return; }
+    const t = setTimeout(() => onUpdateRef.current(data), 600);
+    return () => clearTimeout(t);
+  }, [data]);
+
+  const handleClose = () => {
+    onUpdateRef.current(data);
+    onClose();
   };
 
   const showNotice = (msg: string) => {
@@ -393,7 +400,7 @@ export default function ChassisModal({
   return (
     <div
       className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div
         className="rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col border border-white/[0.08] overflow-hidden"
@@ -423,17 +430,8 @@ export default function ChassisModal({
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {hasChanges && (
-                <button
-                  onClick={handleSave}
-                  className="text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
-                  style={{ background: 'linear-gradient(135deg, #f97316, #c2410c)' }}
-                >
-                  Guardar
-                </button>
-              )}
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="text-white/30 hover:text-white transition-colors text-2xl leading-none w-8 h-8 flex items-center justify-center"
               >
                 ×
@@ -521,21 +519,13 @@ export default function ChassisModal({
           ) : (
             <div />
           )}
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-slate-500 hover:text-white font-medium transition-colors"
-            >
-              Cerrar
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-6 py-2.5 text-white text-sm font-semibold rounded-xl transition-all hover:opacity-90 active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #f97316, #c2410c)' }}
-            >
-              Guardar cambios
-            </button>
-          </div>
+          <button
+            onClick={handleClose}
+            className="px-6 py-2.5 text-white text-sm font-semibold rounded-xl transition-all hover:opacity-90 active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #f97316, #c2410c)' }}
+          >
+            Guardar y cerrar
+          </button>
         </div>
       </div>
     </div>
