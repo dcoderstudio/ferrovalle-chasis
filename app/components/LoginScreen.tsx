@@ -19,7 +19,7 @@ const ADMIN_USERS: DisplayUser[] = [
   { id: 'victor-juarez',    name: 'Victor Juarez',    initials: 'VJ', color: '#8b5cf6', role: 'admin' },
   { id: 'monica-romero',    name: 'Mónica Romero',    initials: 'MR', color: '#06b6d4', role: 'admin' },
   { id: 'leonardo-morales', name: 'Leonardo Morales', initials: 'LM', color: '#22c55e', role: 'admin' },
-  { id: 'grupo-civaz',      name: 'Grupo Civaz',      initials: 'GC', color: '#f59e0b', role: 'admin' },
+  { id: 'grupo-civaz',      name: 'Geschaft Group',   initials: 'GG', color: '#f59e0b', role: 'admin' },
 ];
 
 const DIAGNOSIS_USERS: DisplayUser[] = [
