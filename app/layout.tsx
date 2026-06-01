@@ -17,6 +17,9 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'Ferrovalle',
   },
+  icons: {
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export const viewport: Viewport = {
