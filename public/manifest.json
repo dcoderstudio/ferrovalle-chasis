@@ -1,0 +1,17 @@
+{
+  "name": "Ferrovalle — Gestión de Chasis",
+  "short_name": "Ferrovalle",
+  "description": "Sistema de gestión de reparación de chasis de grúas",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080d18",
+  "theme_color": "#080d18",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/ferrovalle-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
