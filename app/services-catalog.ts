@@ -49,45 +49,45 @@ export const SERVICES: Service[] = [
 
   // ── Cabezal frontal ────────────────────────────────────────────────────────
   { id: 'cab-01', category: 'Cabezal frontal', name: 'SOLDAR / REFORZAR CABEZAL FRONTAL 12"',                 basePrice:  3795, affectedBySize: false },
-  { id: 'cab-02', category: 'Cabezal frontal', name: 'SOLDAR / REFORZAR CABEZAL FRONTAL 16"',                 basePrice:  5690, affectedBySize: false },
+  { id: 'cab-02', category: 'Cabezal frontal', name: 'SOLDAR / REFORZAR CABEZAL FRONTAL 16"',                 basePrice:  2105, affectedBySize: false },
   { id: 'cab-03', category: 'Cabezal frontal', name: 'REEMPLAZO DE CABEZAL FRONTAL DERECHO',                  basePrice:  5786, affectedBySize: false },
-  { id: 'cab-04', category: 'Cabezal frontal', name: 'ENDEREZAR CABEZAL FRONTAL 11"',                         basePrice:  3795, affectedBySize: false },
+  { id: 'cab-04', category: 'Cabezal frontal', name: 'ENDEREZAR CABEZAL FRONTAL 11"',                         basePrice:  2998, affectedBySize: false },
   { id: 'cab-05', category: 'Cabezal frontal', name: 'ENDEREZAR CEJA FRONTAL 5"',                             basePrice:  1136, affectedBySize: false },
-  { id: 'cab-06', category: 'Cabezal frontal', name: 'ENDEREZAR CEJA FRONTAL 8"',                             basePrice:  3795, affectedBySize: false },
+  { id: 'cab-06', category: 'Cabezal frontal', name: 'ENDEREZAR CEJA FRONTAL 8"',                             basePrice:  2125, affectedBySize: false },
   { id: 'cab-07', category: 'Cabezal frontal', name: 'ENDEREZAR CEJA FRONTAL 12"',                            basePrice:  2936, affectedBySize: false },
 
   // ── Cuello de ganso ────────────────────────────────────────────────────────
-  { id: 'cg-01',  category: 'Cuello de ganso', name: 'SOLDAR PLACA TRAVESAÑO CUELLO DE GANSO 12"',            basePrice:  5690, affectedBySize: false },
+  { id: 'cg-01',  category: 'Cuello de ganso', name: 'SOLDAR PLACA TRAVESAÑO CUELLO DE GANSO 12"',            basePrice:  4268, affectedBySize: false },
   { id: 'cg-02',  category: 'Cuello de ganso', name: 'ENDEREZAR PLACA DE CUELLO DE GANSO 4"',                 basePrice:  1018, affectedBySize: false },
-  { id: 'cg-03',  category: 'Cuello de ganso', name: 'ENDEREZAR PLACA DE CUELLO DE GANSO 8"',                 basePrice:  5690, affectedBySize: false },
-  { id: 'cg-04',  category: 'Cuello de ganso', name: 'ENDEREZAR PLACA DE CUELLO DE GANSO 12"',                basePrice:  3795, affectedBySize: false },
+  { id: 'cg-03',  category: 'Cuello de ganso', name: 'ENDEREZAR PLACA DE CUELLO DE GANSO 8"',                 basePrice:  2219, affectedBySize: false },
+  { id: 'cg-04',  category: 'Cuello de ganso', name: 'ENDEREZAR PLACA DE CUELLO DE GANSO 12"',                basePrice:  3188, affectedBySize: false },
   { id: 'cg-05',  category: 'Cuello de ganso', name: 'ENDEREZAR Y SOLDAR PERCHA FRONTAL',                     basePrice:  2877, affectedBySize: false },
 
   // ── Vigas ──────────────────────────────────────────────────────────────────
   { id: 'vig-01', category: 'Vigas', name: 'SOLDAR / REFORZAR VIGA 6"',                                       basePrice:  1918, affectedBySize: false },
   { id: 'vig-02', category: 'Vigas', name: 'SOLDAR / REFORZAR VIGA 12"',                                      basePrice:  3795, affectedBySize: false },
   { id: 'vig-03', category: 'Vigas', name: 'SOLDAR / REFORZAR VIGA 42" (Lado Derecho / Lado Izquierdo)',      basePrice: 13276, affectedBySize: false, subOptions: LADI },
-  { id: 'vig-04', category: 'Vigas', name: 'ENDEREZAR VIGA TRASERA CENTRAL 8"',                               basePrice:  3795, affectedBySize: false },
+  { id: 'vig-04', category: 'Vigas', name: 'ENDEREZAR VIGA TRASERA CENTRAL 8"',                               basePrice:  2125, affectedBySize: false },
 
   // ── Estructura interior ────────────────────────────────────────────────────
   { id: 'est-01', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 6" (Derecho / Izquierdo)', basePrice: 1918, affectedBySize: false, subOptions: ['Derecho', 'Izquierdo'] },
   { id: 'est-02', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 12"',                    basePrice:  3795, affectedBySize: false },
-  { id: 'est-03', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 13"',                    basePrice:  5690, affectedBySize: false },
+  { id: 'est-03', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 13"',                    basePrice:  4780, affectedBySize: false },
   { id: 'est-04', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 18"',                    basePrice:  5690, affectedBySize: false },
   { id: 'est-05', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 30"',                    basePrice:  9696, affectedBySize: false },
   { id: 'est-06', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 33"',                    basePrice: 10314, affectedBySize: false },
   { id: 'est-07', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 34"',                    basePrice:  5690, affectedBySize: false },
 
   // ── Parte frontal ──────────────────────────────────────────────────────────
-  { id: 'frt-01', category: 'Parte frontal', name: 'ENDEREZAR PARTE FRONTAL DERECHA/IZQUIERDA 4"',            basePrice:  3795, affectedBySize: false, subOptions: DI },
+  { id: 'frt-01', category: 'Parte frontal', name: 'ENDEREZAR PARTE FRONTAL DERECHA/IZQUIERDA 4"',            basePrice:  1063, affectedBySize: false, subOptions: DI },
   { id: 'frt-02', category: 'Parte frontal', name: 'ENDEREZAR PARTE FRONTAL DERECHA/IZQUIERDA 5"',            basePrice:  1205, affectedBySize: false, subOptions: DI },
-  { id: 'frt-03', category: 'Parte frontal', name: 'ENDEREZAR PARTE FRONTAL DERECHA/IZQUIERDA 8"',            basePrice:  3795, affectedBySize: false, subOptions: DI },
+  { id: 'frt-03', category: 'Parte frontal', name: 'ENDEREZAR PARTE FRONTAL DERECHA/IZQUIERDA 8"',            basePrice:  2125, affectedBySize: false, subOptions: DI },
   { id: 'frt-04', category: 'Parte frontal', name: 'ENDEREZAR PARTE FRONTAL DERECHA/IZQUIERDA 16"',           basePrice:  3795, affectedBySize: false, subOptions: DI },
   { id: 'frt-05', category: 'Parte frontal', name: 'SOLDAR / REFORZAR PARTE FRONTAL 6"',                      basePrice:  1918, affectedBySize: false },
   { id: 'frt-06', category: 'Parte frontal', name: 'SOLDAR / REFORZAR PARTE FRONTAL 18"',                     basePrice:  5690, affectedBySize: false },
   { id: 'frt-07', category: 'Parte frontal', name: 'ENDEREZAR BASE PORTACANDADO FRONTAL 5"',                  basePrice:  1204, affectedBySize: false },
-  { id: 'frt-08', category: 'Parte frontal', name: 'ENDEREZAR BASE PORTACANDADO FRONTAL 7"',                  basePrice:  3795, affectedBySize: false },
-  { id: 'frt-09', category: 'Parte frontal', name: 'ENDEREZAR BASE DE PERNO DE CANDADO FRONTAL',              basePrice:  1204, affectedBySize: false },
+  { id: 'frt-08', category: 'Parte frontal', name: 'ENDEREZAR BASE PORTACANDADO FRONTAL 7"',                  basePrice:  1973, affectedBySize: false },
+  { id: 'frt-09', category: 'Parte frontal', name: 'ENDEREZAR BASE DE PERNO DE CANDADO FRONTAL',              basePrice:  1072, affectedBySize: false },
 
   // ── Parte trasera ──────────────────────────────────────────────────────────
   { id: 'tra-01', category: 'Parte trasera', name: 'ENDEREZAR BASE DE PERNO DE CANDADO TRASERO',              basePrice:  1509, affectedBySize: false },
@@ -97,8 +97,8 @@ export const SERVICES: Service[] = [
   { id: 'tra-05', category: 'Parte trasera', name: 'SOLDAR / REFORZAR PARTE TRASERA 24"',                     basePrice:  7586, affectedBySize: false },
   { id: 'tra-06', category: 'Parte trasera', name: 'SOLDAR / REFORZAR PARTE TRASERA 30"',                     basePrice:  9163, affectedBySize: false },
   { id: 'tra-07', category: 'Parte trasera', name: 'SOLDAR / REFORZAR PARTE TRASERA 36"',                     basePrice: 11635, affectedBySize: false },
-  { id: 'tra-08', category: 'Parte trasera', name: 'SOLDAR / REFORZAR PARTE TRASERA',                         basePrice:  5690, affectedBySize: false },
-  { id: 'tra-09', category: 'Parte trasera', name: 'ENDEREZAR Y REFORZAR CARTABÓN DERECHO TRASERO',           basePrice:  5690, affectedBySize: false },
+  { id: 'tra-08', category: 'Parte trasera', name: 'SOLDAR / REFORZAR PARTE TRASERA',                         basePrice:  2105, affectedBySize: false },
+  { id: 'tra-09', category: 'Parte trasera', name: 'ENDEREZAR Y REFORZAR CARTABÓN DERECHO TRASERO',           basePrice:  2105, affectedBySize: false },
 
   // ── Carguero y alas ────────────────────────────────────────────────────────
   { id: 'car-01', category: 'Carguero y alas', name: 'RECONSTRUCCIÓN DE SOPORTE PERPENDICULAR DE CARGUERO',  basePrice: 12805, affectedBySize: false },
@@ -114,7 +114,7 @@ export const SERVICES: Service[] = [
 
   // ── Soportes y bases ───────────────────────────────────────────────────────
   { id: 'sop-01', category: 'Soportes y bases', name: 'REEMPLAZAR PLACA DE 4X7PLG EN BASE PORTA CANDADO',    basePrice:  1995, affectedBySize: false },
-  { id: 'sop-02', category: 'Soportes y bases', name: 'ENDEREZAR Y SOLDAR DE BASE PORTA MANITAS',            basePrice:  5690, affectedBySize: false },
+  { id: 'sop-02', category: 'Soportes y bases', name: 'ENDEREZAR Y SOLDAR DE BASE PORTA MANITAS',            basePrice:  4268, affectedBySize: false },
   { id: 'sop-03', category: 'Soportes y bases', name: 'SOLDAR / REFORZAR SOPORTE LATERAL 12"',               basePrice:  3793, affectedBySize: false },
   { id: 'sop-04', category: 'Soportes y bases', name: 'SOLDAR / REFORZAR BASE PORTACANDADO 18"',             basePrice:  5690, affectedBySize: false },
   { id: 'sop-05', category: 'Soportes y bases', name: 'ENDEREZAR / SOLDAR BASE PORTA PLAFONES 12"',          basePrice:  3795, affectedBySize: false },
@@ -122,7 +122,7 @@ export const SERVICES: Service[] = [
   { id: 'sop-07', category: 'Soportes y bases', name: 'SOLDAR / REFORZAR BASE LATERAL 12"',                  basePrice:  3795, affectedBySize: false },
   { id: 'sop-08', category: 'Soportes y bases', name: 'SOLDAR / REFORZAR BASE LATERAL 18"',                  basePrice:  5690, affectedBySize: false },
   { id: 'sop-09', category: 'Soportes y bases', name: 'ENDEREZAR BASE PORTA PLAFONES 4"',                    basePrice:  1018, affectedBySize: false },
-  { id: 'sop-10', category: 'Soportes y bases', name: 'ENDEREZAR / SOLDAR BASE PORTA PLAFONES 3"',           basePrice:  5690, affectedBySize: false },
+  { id: 'sop-10', category: 'Soportes y bases', name: 'ENDEREZAR / SOLDAR BASE PORTA PLAFONES 3"',           basePrice:  1138, affectedBySize: false },
   { id: 'sop-11', category: 'Soportes y bases', name: 'ENDEREZAR / SOLDAR BASE PORTA CANDADO',               basePrice:  3795, affectedBySize: false },
   { id: 'sop-12', category: 'Soportes y bases', name: 'ENDEREZAR / SOLDAR BASE PORTA PLAFONES 24"',          basePrice:  7586, affectedBySize: false },
 
