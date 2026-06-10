@@ -41,7 +41,7 @@ export const SERVICES: Service[] = [
   { id: 'trv-04', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 30"', basePrice:  9163, affectedBySize: false, subOptions: FTT },
   { id: 'trv-05', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 37"', basePrice:  6900, affectedBySize: false, subOptions: FTT },
   { id: 'trv-06', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 42"', basePrice: 12829, affectedBySize: false, subOptions: FTT },
-  { id: 'trv-07', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 48"', basePrice: 14832, affectedBySize: false, subOptions: FTT },
+  { id: 'trv-07', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 48"', basePrice: 14832, affectedBySize: false, subOptions: [...FTT, 'Derecho', 'Izquierdo'] },
   { id: 'trv-08', category: 'Travesaños', name: 'REFORZAR TRAVESAÑO TRANSVERSAL CON PLACA DE 6X6PLG',         basePrice:  1995, affectedBySize: false },
   { id: 'trv-09', category: 'Travesaños', name: 'AJUSTAR 2 TRAVESAÑOS TRANSVERSALES FRONTALES',               basePrice:  1204, affectedBySize: false },
   { id: 'trv-10', category: 'Travesaños', name: 'SOLDAR/REFORZAR REAR BOLSTER 9"',                            basePrice:  2900, affectedBySize: false },
