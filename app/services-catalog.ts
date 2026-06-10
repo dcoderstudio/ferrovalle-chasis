@@ -77,6 +77,7 @@ export const SERVICES: Service[] = [
   { id: 'est-05', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 30"',                    basePrice:  9696, affectedBySize: false },
   { id: 'est-06', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 33"',                    basePrice: 10314, affectedBySize: false },
   { id: 'est-07', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 34"',                    basePrice:  5690, affectedBySize: false },
+  { id: 'est-08', category: 'Estructura interior', name: 'SOLDAR SECCIÓN ENTRE TRAVESAÑOS INTERIORES (Lado Derecho / Lado Izquierdo)', basePrice: 13200, affectedBySize: false, subOptions: LADI },
 
   // ── Parte frontal ──────────────────────────────────────────────────────────
   { id: 'frt-01', category: 'Parte frontal', name: 'ENDEREZAR PARTE FRONTAL DERECHA/IZQUIERDA 4"',            basePrice:  1063, affectedBySize: false, subOptions: DI },
