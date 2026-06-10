@@ -126,6 +126,7 @@ export const SERVICES: Service[] = [
   { id: 'sop-10', category: 'Soportes y bases', name: 'ENDEREZAR / SOLDAR BASE PORTA PLAFONES 3"',           basePrice:  1138, affectedBySize: false },
   { id: 'sop-11', category: 'Soportes y bases', name: 'ENDEREZAR / SOLDAR BASE PORTA CANDADO',               basePrice:  3795, affectedBySize: false },
   { id: 'sop-12', category: 'Soportes y bases', name: 'ENDEREZAR / SOLDAR BASE PORTA PLAFONES 24"',          basePrice:  7586, affectedBySize: false },
+  { id: 'sop-13', category: 'Soportes y bases', name: 'ENDEREZAR BASE DE CANDADO (Derecho / Izquierdo)',     basePrice:   980, affectedBySize: false, subOptions: ['Derecho', 'Izquierdo'] },
 
   // ── Balancines y muelles ───────────────────────────────────────────────────
   { id: 'bal-01', category: 'Balancines y muelles', name: 'SOLDAR Y ENDEREZAR DE BALANCÍN',                                     basePrice:  2908, affectedBySize: false },
