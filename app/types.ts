@@ -33,6 +33,7 @@ export type Chassis = {
   notes: string;
   createdAt: string;
   completedServices: string[];
+  approvedServices?: string[];
   priority: boolean;
   requestedBy: string;
   pdfPurchaseOrder: string;

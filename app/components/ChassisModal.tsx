@@ -508,6 +508,7 @@ export default function ChassisModal({
               data={data}
               serviceUnitPrice={serviceUnitPrice}
               quotedTotal={quotedTotal}
+              update={update}
             />
           )}
         </div>
@@ -1160,16 +1161,18 @@ function DiagnosticoTab({
   );
 }
 
-// ─── Cotización Tab (solo lectura) ────────────────────────────────────────────
+// ─── Cotización Tab ───────────────────────────────────────────────────────────
 
 function CotizacionTab({
   data,
   serviceUnitPrice,
   quotedTotal,
+  update,
 }: {
   data: Chassis;
   serviceUnitPrice: (svc: Service) => number;
   quotedTotal: number;
+  update: (f: Partial<Chassis>) => void;
 }) {
   const activeItems = data.selectedServices
     .map(sel => {
@@ -1186,6 +1189,110 @@ function CotizacionTab({
       unitPrice: number;
       subtotal: number;
     }>;
+
+  const approved = data.approvedServices ?? [];
+  const allApproved = activeItems.length > 0 && activeItems.every(i => approved.includes(i.svc.id));
+  const someApproved = approved.length > 0;
+  const approvedItems = activeItems.filter(i => approved.includes(i.svc.id));
+  const approvedTotal = approvedItems.reduce((sum, i) => sum + i.subtotal, 0);
+
+  const toggleApproveAll = () => {
+    if (allApproved) {
+      update({ approvedServices: [] });
+    } else {
+      update({ approvedServices: activeItems.map(i => i.svc.id) });
+    }
+  };
+
+  const toggleApprove = (serviceId: string) => {
+    const current = data.approvedServices ?? [];
+    if (current.includes(serviceId)) {
+      update({ approvedServices: current.filter(id => id !== serviceId) });
+    } else {
+      update({ approvedServices: [...current, serviceId] });
+    }
+  };
+
+  const generateApprovedPDF = () => {
+    if (approvedItems.length === 0) return;
+    const today = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+    const rows = approvedItems.map(({ sel, svc, qty, unitPrice, subtotal }) => {
+      let name = svc.name;
+      if (svc.subOptions && sel.selectedSubOptions && sel.selectedSubOptions.length > 0) {
+        name += ` — ${sel.selectedSubOptions.join(', ')}`;
+      }
+      return `<tr><td>${name}</td><td style="text-align:center">${qty}</td><td style="text-align:right;font-weight:600;color:#1e3a5f">${formatCurrency(unitPrice)}</td><td style="text-align:right;font-weight:700;color:#1e3a5f">${formatCurrency(subtotal)}</td></tr>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+    <title>Cotización Aprobada — Chasis #${data.chassisNumber}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{font-family:'Montserrat',sans-serif;color:#1e293b;background:#fff;padding:40px;font-size:13px}
+      .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:18px;border-bottom:3px solid #1e3a5f}
+      .co{font-size:26px;font-weight:800;color:#1e3a5f;letter-spacing:-0.5px}
+      .co-sub{font-size:11px;color:#64748b;margin-top:3px}
+      .dt h2{font-size:15px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:1px;text-align:right}
+      .dt p{font-size:11px;color:#64748b;margin-top:3px;text-align:right}
+      .badge{display:inline-block;background:#059669;color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:1.5px;margin-top:6px}
+      .sec{margin-bottom:22px}
+      .sec-title{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #e2e8f0}
+      .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+      .fi label{font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px}
+      .fi span{font-size:14px;font-weight:600;color:#1e293b}
+      table{width:100%;border-collapse:collapse}
+      thead th{background:#1e3a5f;color:#fff;padding:9px 12px;font-size:10px;font-weight:700;text-align:left;text-transform:uppercase;letter-spacing:1px}
+      tbody td{padding:9px 12px;border-bottom:1px solid #f1f5f9;font-size:12px}
+      tbody tr:nth-child(even){background:#f8fafc}
+      .total-bar{display:flex;justify-content:flex-end;align-items:center;gap:20px;padding:12px 14px;background:#059669;border-radius:0 0 6px 6px}
+      .tl{font-size:12px;font-weight:600;color:#d1fae5}
+      .ta{font-size:22px;font-weight:800;color:#fff}
+      .footer{margin-top:36px;padding-top:18px;border-top:1px solid #e2e8f0;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+      .sign label{font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:22px}
+      .sign-line{border-top:1px solid #94a3b8}
+      @media print{body{padding:20px}@page{margin:12mm}}
+    </style></head><body>
+    <div class="hdr">
+      <div>
+        <div class="co">FERROVALLE</div>
+        <div class="co-sub">Mantenimiento y Reparación de Chasis de Grúas</div>
+        <div class="badge">✓ COTIZACIÓN APROBADA</div>
+      </div>
+      <div class="dt"><h2>Cotización Aprobada</h2><p>Fecha: ${today}</p></div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Información del Chasis</div>
+      <div class="grid">
+        <div class="fi"><label>Número de Chasis</label><span>#${data.chassisNumber || '—'}</span></div>
+        ${data.clientName ? `<div class="fi"><label>Cliente</label><span>${data.clientName}</span></div>` : ''}
+        ${data.purchaseOrder ? `<div class="fi"><label>Orden de Compra</label><span>${data.purchaseOrder}</span></div>` : ''}
+        <div class="fi"><label>Tamaño</label><span>${SIZE_LABELS[data.size] ?? data.size}</span></div>
+        ${data.commitmentDate ? `<div class="fi"><label>Entrega compromiso</label><span>${new Date(data.commitmentDate+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}</span></div>` : ''}
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Servicios Aprobados</div>
+      <table>
+        <thead><tr><th>Servicio</th><th style="text-align:center">Cant.</th><th style="text-align:right">Precio unit.</th><th style="text-align:right">Subtotal</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="total-bar"><span class="tl">Total aprobado</span><span class="ta">${formatCurrency(approvedTotal)}</span></div>
+    </div>
+    ${data.notes ? `<div class="sec"><div class="sec-title">Observaciones</div><div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;font-size:13px;color:#475569;line-height:1.6">${data.notes}</div></div>` : ''}
+    <div class="footer">
+      <div class="sign"><label>Aprobado por</label><div class="sign-line"></div></div>
+      <div class="sign"><label>Fecha</label><div class="sign-line"></div></div>
+      <div class="sign"><label>Firma</label><div class="sign-line"></div></div>
+    </div>
+    </body></html>`;
+
+    const win = window.open('', '_blank', 'width=920,height=720');
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => win.print(), 800);
+  };
 
   if (activeItems.length === 0) {
     return (
@@ -1208,22 +1315,68 @@ function CotizacionTab({
 
   return (
     <div className="space-y-3">
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
-        Servicios seleccionados
-      </p>
+      {/* Header: approve all toggle */}
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          Servicios cotizados
+        </p>
+        <button
+          onClick={toggleApproveAll}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+          style={{
+            background: allApproved ? 'rgba(5,150,105,0.15)' : 'rgba(255,255,255,0.05)',
+            border: allApproved ? '1px solid rgba(5,150,105,0.4)' : '1px solid rgba(255,255,255,0.08)',
+            color: allApproved ? '#34d399' : '#94a3b8',
+          }}
+        >
+          <div
+            className="w-4 h-4 rounded flex items-center justify-center transition-all"
+            style={{
+              background: allApproved ? '#059669' : 'rgba(255,255,255,0.08)',
+              border: allApproved ? 'none' : '1.5px solid rgba(255,255,255,0.2)',
+            }}
+          >
+            {allApproved && (
+              <svg viewBox="0 0 10 10" fill="none" stroke="white" strokeWidth="2.5" className="w-2.5 h-2.5">
+                <polyline points="1.5 5 4 7.5 8.5 2" />
+              </svg>
+            )}
+          </div>
+          {allApproved ? 'Quitar todos' : 'Aprobar todos'}
+        </button>
+      </div>
 
+      {/* Service rows with approval checkboxes */}
       {activeItems.map(({ sel, svc, qty, unitPrice, subtotal }) => {
+        const isApproved = approved.includes(svc.id);
         const subLabel = svc.subOptions && sel.selectedSubOptions && sel.selectedSubOptions.length > 0
           ? sel.selectedSubOptions.join(', ')
           : null;
         return (
-          <div
+          <button
             key={sel.serviceId}
-            className="flex items-start justify-between p-4 rounded-xl border border-white/[0.06]"
-            style={{ background: '#141b2d' }}
+            onClick={() => toggleApprove(svc.id)}
+            className="w-full flex items-start gap-3 p-4 rounded-xl border text-left transition-all"
+            style={{
+              background: isApproved ? 'rgba(5,150,105,0.08)' : '#141b2d',
+              border: isApproved ? '1px solid rgba(5,150,105,0.3)' : '1px solid rgba(255,255,255,0.06)',
+            }}
           >
+            <div
+              className="w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5 transition-all"
+              style={{
+                background: isApproved ? '#059669' : 'rgba(255,255,255,0.06)',
+                border: isApproved ? 'none' : '1.5px solid rgba(255,255,255,0.15)',
+              }}
+            >
+              {isApproved && (
+                <svg viewBox="0 0 10 10" fill="none" stroke="white" strokeWidth="2.5" className="w-2.5 h-2.5">
+                  <polyline points="1.5 5 4 7.5 8.5 2" />
+                </svg>
+              )}
+            </div>
             <div className="min-w-0 flex-1">
-              <p className="text-white font-semibold text-sm">{svc.name}</p>
+              <p className="text-white font-semibold text-sm leading-snug">{svc.name}</p>
               {subLabel && (
                 <p className="text-orange-300/70 text-xs mt-0.5 font-medium">{subLabel}</p>
               )}
@@ -1231,14 +1384,17 @@ function CotizacionTab({
                 {qty} × {formatCurrency(unitPrice)}
               </p>
             </div>
-            <p className="text-orange-400 font-bold text-sm shrink-0 ml-4">
+            <p
+              className="font-bold text-sm shrink-0 ml-2"
+              style={{ color: isApproved ? '#34d399' : '#f97316' }}
+            >
               {formatCurrency(subtotal)}
             </p>
-          </div>
+          </button>
         );
       })}
 
-      {/* Totales */}
+      {/* Total cotizado */}
       <div
         className="rounded-xl border-2 border-orange-400/20 p-5 mt-2"
         style={{ background: 'rgba(249,115,22,0.06)' }}
@@ -1259,6 +1415,37 @@ function CotizacionTab({
           </div>
         )}
       </div>
+
+      {/* Total aprobado + botón PDF */}
+      {someApproved && (
+        <div
+          className="rounded-xl border-2 p-5"
+          style={{ background: 'rgba(5,150,105,0.08)', borderColor: 'rgba(5,150,105,0.3)' }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm font-semibold text-emerald-300">Total aprobado</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {approvedItems.length} servicio{approvedItems.length !== 1 ? 's' : ''} aprobado{approvedItems.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <p className="text-3xl font-bold text-emerald-400">{formatCurrency(approvedTotal)}</p>
+          </div>
+          <button
+            onClick={generateApprovedPDF}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all"
+            style={{ background: '#059669', color: '#fff' }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+            Generar cotización aprobada
+          </button>
+        </div>
+      )}
     </div>
   );
 }
