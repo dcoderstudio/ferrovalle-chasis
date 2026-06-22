@@ -1394,58 +1394,61 @@ function CotizacionTab({
         );
       })}
 
-      {/* Total cotizado */}
-      <div
-        className="rounded-xl border-2 border-orange-400/20 p-5 mt-2"
-        style={{ background: 'rgba(249,115,22,0.06)' }}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold text-white">Total cotizado</p>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {activeItems.length} servicio{activeItems.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-          <p className="text-3xl font-bold text-orange-400">{formatCurrency(quotedTotal)}</p>
-        </div>
-        {data.finalPrice != null && (
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.06]">
-            <p className="text-sm text-slate-400">Precio final acordado</p>
-            <p className="text-2xl font-bold text-emerald-400">{formatCurrency(data.finalPrice)}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Total aprobado + botón PDF */}
-      {someApproved && (
-        <div
-          className="rounded-xl border-2 p-5"
-          style={{ background: 'rgba(5,150,105,0.08)', borderColor: 'rgba(5,150,105,0.3)' }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sm font-semibold text-emerald-300">Total aprobado</p>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {approvedItems.length} servicio{approvedItems.length !== 1 ? 's' : ''} aprobado{approvedItems.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-            <p className="text-3xl font-bold text-emerald-400">{formatCurrency(approvedTotal)}</p>
-          </div>
-          <button
-            onClick={generateApprovedPDF}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all"
-            style={{ background: '#059669', color: '#fff' }}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="12" y1="18" x2="12" y2="12"/>
-              <line x1="9" y1="15" x2="15" y2="15"/>
-            </svg>
-            Generar cotización aprobada
-          </button>
+      {/* Precio final acordado (si existe) */}
+      {data.finalPrice != null && (
+        <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-white/[0.06]"
+          style={{ background: '#141b2d' }}>
+          <p className="text-sm text-slate-400">Precio final acordado</p>
+          <p className="text-xl font-bold text-emerald-400">{formatCurrency(data.finalPrice)}</p>
         </div>
       )}
+
+      {/* Sticky bottom bar — total + PDF button */}
+      <div
+        className="sticky bottom-0 flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
+        style={{
+          background: 'rgba(15,20,32,0.97)',
+          backdropFilter: 'blur(8px)',
+          borderColor: someApproved ? 'rgba(5,150,105,0.3)' : 'rgba(249,115,22,0.2)',
+        }}
+      >
+        <div className="min-w-0">
+          {someApproved ? (
+            <>
+              <p className="text-xs text-slate-500">
+                {approvedItems.length} aprobado{approvedItems.length !== 1 ? 's' : ''} · {activeItems.length} total
+              </p>
+              <p className="text-lg font-bold text-emerald-400 leading-tight">{formatCurrency(approvedTotal)}</p>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-slate-500">
+                {activeItems.length} servicio{activeItems.length !== 1 ? 's' : ''} · sin aprobar
+              </p>
+              <p className="text-lg font-bold text-orange-400 leading-tight">{formatCurrency(quotedTotal)}</p>
+            </>
+          )}
+        </div>
+        <button
+          onClick={generateApprovedPDF}
+          disabled={!someApproved}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold transition-all hover:opacity-90 active:scale-95 shrink-0"
+          style={{
+            background: someApproved ? 'rgba(5,150,105,0.15)' : 'rgba(255,255,255,0.04)',
+            borderColor: someApproved ? 'rgba(5,150,105,0.4)' : 'rgba(255,255,255,0.06)',
+            color: someApproved ? '#34d399' : '#475569',
+            cursor: someApproved ? 'pointer' : 'not-allowed',
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 shrink-0">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+          Cotización aprobada
+        </button>
+      </div>
     </div>
   );
 }
