@@ -26,11 +26,12 @@ export const CATEGORIES = [
 const FTT = ['Frontal', 'Trasero', 'Transversal'];
 const DI  = ['Derecha', 'Izquierda'];
 const LADI = ['Lado Derecho', 'Lado Izquierdo'];
+const DER_IZQ = ['Derecho', 'Izquierdo'];
 
 export const SERVICES: Service[] = [
   // ── Patín y tirantes ───────────────────────────────────────────────────────
-  { id: 'pat-01', category: 'Patín y tirantes', name: 'REEMPLAZO DE PATÍN REFORZADO CON COMPLEMENTOS',        basePrice: 11986, affectedBySize: false },
-  { id: 'pat-02', category: 'Patín y tirantes', name: 'REEMPLAZO DE TIRANTES DE PATÍN REFORZADOS',            basePrice: 11571, affectedBySize: false },
+  { id: 'pat-01', category: 'Patín y tirantes', name: 'REEMPLAZO DE PATÍN REFORZADO CON COMPLEMENTOS',        basePrice: 11986, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'pat-02', category: 'Patín y tirantes', name: 'REEMPLAZO DE TIRANTES DE PATÍN REFORZADOS',            basePrice: 11571, affectedBySize: false, subOptions: DER_IZQ },
   { id: 'pat-03', category: 'Patín y tirantes', name: 'COLOCACIÓN DE SOPORTE PARA TIRANTES',                  basePrice:  5180, affectedBySize: false },
   { id: 'pat-04', category: 'Patín y tirantes', name: 'REEMPLAZO DE SOPORTE REFORZADO PARA PATÍN',            basePrice:  3536, affectedBySize: false },
 
@@ -41,7 +42,7 @@ export const SERVICES: Service[] = [
   { id: 'trv-04', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 30"', basePrice:  9163, affectedBySize: false, subOptions: FTT },
   { id: 'trv-05', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 37"', basePrice:  6900, affectedBySize: false, subOptions: FTT },
   { id: 'trv-06', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 42"', basePrice: 12829, affectedBySize: false, subOptions: FTT },
-  { id: 'trv-07', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 48"', basePrice: 14832, affectedBySize: false, subOptions: [...FTT, 'Derecho', 'Izquierdo'] },
+  { id: 'trv-07', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 48"', basePrice: 14832, affectedBySize: false, subOptions: [...FTT, ...DER_IZQ] },
   { id: 'trv-08', category: 'Travesaños', name: 'REFORZAR TRAVESAÑO TRANSVERSAL CON PLACA DE 6X6PLG',         basePrice:  1995, affectedBySize: false },
   { id: 'trv-09', category: 'Travesaños', name: 'AJUSTAR 2 TRAVESAÑOS TRANSVERSALES FRONTALES',               basePrice:  1204, affectedBySize: false },
   { id: 'trv-10', category: 'Travesaños', name: 'SOLDAR/REFORZAR REAR BOLSTER 9"',                            basePrice:  2900, affectedBySize: false },
@@ -52,15 +53,15 @@ export const SERVICES: Service[] = [
   { id: 'cab-02', category: 'Cabezal frontal', name: 'SOLDAR / REFORZAR CABEZAL FRONTAL 16"',                 basePrice:  2105, affectedBySize: false },
   { id: 'cab-03', category: 'Cabezal frontal', name: 'REEMPLAZO DE CABEZAL FRONTAL DERECHO',                  basePrice:  5786, affectedBySize: false },
   { id: 'cab-04', category: 'Cabezal frontal', name: 'ENDEREZAR CABEZAL FRONTAL 11"',                         basePrice:  2998, affectedBySize: false },
-  { id: 'cab-05', category: 'Cabezal frontal', name: 'ENDEREZAR CEJA FRONTAL 5"',                             basePrice:  1136, affectedBySize: false },
-  { id: 'cab-06', category: 'Cabezal frontal', name: 'ENDEREZAR CEJA FRONTAL 8"',                             basePrice:  2125, affectedBySize: false },
-  { id: 'cab-07', category: 'Cabezal frontal', name: 'ENDEREZAR CEJA FRONTAL 12"',                            basePrice:  2936, affectedBySize: false },
+  { id: 'cab-05', category: 'Cabezal frontal', name: 'ENDEREZAR CEJA FRONTAL 5"',                             basePrice:  1136, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'cab-06', category: 'Cabezal frontal', name: 'ENDEREZAR CEJA FRONTAL 8"',                             basePrice:  2125, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'cab-07', category: 'Cabezal frontal', name: 'ENDEREZAR CEJA FRONTAL 12"',                            basePrice:  2936, affectedBySize: false, subOptions: DER_IZQ },
 
   // ── Cuello de ganso ────────────────────────────────────────────────────────
   { id: 'cg-01',  category: 'Cuello de ganso', name: 'SOLDAR PLACA TRAVESAÑO CUELLO DE GANSO 12"',            basePrice:  4268, affectedBySize: false },
-  { id: 'cg-02',  category: 'Cuello de ganso', name: 'ENDEREZAR PLACA DE CUELLO DE GANSO 4"',                 basePrice:  1018, affectedBySize: false },
-  { id: 'cg-03',  category: 'Cuello de ganso', name: 'ENDEREZAR PLACA DE CUELLO DE GANSO 8"',                 basePrice:  2219, affectedBySize: false },
-  { id: 'cg-04',  category: 'Cuello de ganso', name: 'ENDEREZAR PLACA DE CUELLO DE GANSO 12"',                basePrice:  3188, affectedBySize: false },
+  { id: 'cg-02',  category: 'Cuello de ganso', name: 'ENDEREZAR PLACA DE CUELLO DE GANSO 4"',                 basePrice:  1018, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'cg-03',  category: 'Cuello de ganso', name: 'ENDEREZAR PLACA DE CUELLO DE GANSO 8"',                 basePrice:  2219, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'cg-04',  category: 'Cuello de ganso', name: 'ENDEREZAR PLACA DE CUELLO DE GANSO 12"',                basePrice:  3188, affectedBySize: false, subOptions: DER_IZQ },
   { id: 'cg-05',  category: 'Cuello de ganso', name: 'ENDEREZAR Y SOLDAR PERCHA FRONTAL',                     basePrice:  2877, affectedBySize: false },
 
   // ── Vigas ──────────────────────────────────────────────────────────────────
@@ -70,10 +71,10 @@ export const SERVICES: Service[] = [
   { id: 'vig-04', category: 'Vigas', name: 'ENDEREZAR VIGA TRASERA CENTRAL 8"',                               basePrice:  2125, affectedBySize: false },
 
   // ── Estructura interior ────────────────────────────────────────────────────
-  { id: 'est-01', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 6" (Derecho / Izquierdo)', basePrice: 1918, affectedBySize: false, subOptions: ['Derecho', 'Izquierdo'] },
-  { id: 'est-02', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 12"',                    basePrice:  3795, affectedBySize: false },
+  { id: 'est-01', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 6" (Derecho / Izquierdo)', basePrice: 1918, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'est-02', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 12"',                    basePrice:  3795, affectedBySize: false, subOptions: DER_IZQ },
   { id: 'est-03', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 13"',                    basePrice:  4780, affectedBySize: false },
-  { id: 'est-04', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 18"',                    basePrice:  5690, affectedBySize: false },
+  { id: 'est-04', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 18"',                    basePrice:  5690, affectedBySize: false, subOptions: DER_IZQ },
   { id: 'est-05', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 30"',                    basePrice:  9696, affectedBySize: false },
   { id: 'est-06', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 33"',                    basePrice: 10314, affectedBySize: false },
   { id: 'est-07', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 34"',                    basePrice:  5690, affectedBySize: false },
@@ -84,18 +85,18 @@ export const SERVICES: Service[] = [
   { id: 'frt-02', category: 'Parte frontal', name: 'ENDEREZAR PARTE FRONTAL DERECHA/IZQUIERDA 5"',            basePrice:  1205, affectedBySize: false, subOptions: DI },
   { id: 'frt-03', category: 'Parte frontal', name: 'ENDEREZAR PARTE FRONTAL DERECHA/IZQUIERDA 8"',            basePrice:  2125, affectedBySize: false, subOptions: DI },
   { id: 'frt-04', category: 'Parte frontal', name: 'ENDEREZAR PARTE FRONTAL DERECHA/IZQUIERDA 16"',           basePrice:  3795, affectedBySize: false, subOptions: DI },
-  { id: 'frt-05', category: 'Parte frontal', name: 'SOLDAR / REFORZAR PARTE FRONTAL 6"',                      basePrice:  1918, affectedBySize: false },
-  { id: 'frt-06', category: 'Parte frontal', name: 'SOLDAR / REFORZAR PARTE FRONTAL 18"',                     basePrice:  5690, affectedBySize: false },
-  { id: 'frt-07', category: 'Parte frontal', name: 'ENDEREZAR BASE PORTACANDADO FRONTAL 5"',                  basePrice:  1204, affectedBySize: false },
-  { id: 'frt-08', category: 'Parte frontal', name: 'ENDEREZAR BASE PORTACANDADO FRONTAL 7"',                  basePrice:  1973, affectedBySize: false },
-  { id: 'frt-09', category: 'Parte frontal', name: 'ENDEREZAR BASE DE PERNO DE CANDADO FRONTAL',              basePrice:  1072, affectedBySize: false },
+  { id: 'frt-05', category: 'Parte frontal', name: 'SOLDAR / REFORZAR PARTE FRONTAL 6"',                      basePrice:  1918, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'frt-06', category: 'Parte frontal', name: 'SOLDAR / REFORZAR PARTE FRONTAL 18"',                     basePrice:  5690, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'frt-07', category: 'Parte frontal', name: 'ENDEREZAR BASE PORTACANDADO FRONTAL 5"',                  basePrice:  1204, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'frt-08', category: 'Parte frontal', name: 'ENDEREZAR BASE PORTACANDADO FRONTAL 7"',                  basePrice:  1973, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'frt-09', category: 'Parte frontal', name: 'ENDEREZAR BASE DE PERNO DE CANDADO FRONTAL',              basePrice:  1072, affectedBySize: false, subOptions: DER_IZQ },
 
   // ── Parte trasera ──────────────────────────────────────────────────────────
-  { id: 'tra-01', category: 'Parte trasera', name: 'ENDEREZAR BASE DE PERNO DE CANDADO TRASERO',              basePrice:  1509, affectedBySize: false },
-  { id: 'tra-02', category: 'Parte trasera', name: 'SOLDAR PARTE TRASERA 12"',                                basePrice:  3795, affectedBySize: false },
-  { id: 'tra-03', category: 'Parte trasera', name: 'SOLDAR / REFORZAR PARTE TRASERA 12"',                     basePrice:  3795, affectedBySize: false },
-  { id: 'tra-04', category: 'Parte trasera', name: 'SOLDAR / REFORZAR PARTE TRASERA 18"',                     basePrice:  5690, affectedBySize: false },
-  { id: 'tra-05', category: 'Parte trasera', name: 'SOLDAR / REFORZAR PARTE TRASERA 24"',                     basePrice:  7586, affectedBySize: false },
+  { id: 'tra-01', category: 'Parte trasera', name: 'ENDEREZAR BASE DE PERNO DE CANDADO TRASERO',              basePrice:  1509, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'tra-02', category: 'Parte trasera', name: 'SOLDAR PARTE TRASERA 12"',                                basePrice:  3795, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'tra-03', category: 'Parte trasera', name: 'SOLDAR / REFORZAR PARTE TRASERA 12"',                     basePrice:  3795, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'tra-04', category: 'Parte trasera', name: 'SOLDAR / REFORZAR PARTE TRASERA 18"',                     basePrice:  5690, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'tra-05', category: 'Parte trasera', name: 'SOLDAR / REFORZAR PARTE TRASERA 24"',                     basePrice:  7586, affectedBySize: false, subOptions: DER_IZQ },
   { id: 'tra-06', category: 'Parte trasera', name: 'SOLDAR / REFORZAR PARTE TRASERA 30"',                     basePrice:  9163, affectedBySize: false },
   { id: 'tra-07', category: 'Parte trasera', name: 'SOLDAR / REFORZAR PARTE TRASERA 36"',                     basePrice: 11635, affectedBySize: false },
   { id: 'tra-08', category: 'Parte trasera', name: 'SOLDAR / REFORZAR PARTE TRASERA',                         basePrice:  2105, affectedBySize: false },
@@ -103,13 +104,13 @@ export const SERVICES: Service[] = [
 
   // ── Carguero y alas ────────────────────────────────────────────────────────
   { id: 'car-01', category: 'Carguero y alas', name: 'RECONSTRUCCIÓN DE SOPORTE PERPENDICULAR DE CARGUERO',  basePrice: 12805, affectedBySize: false },
-  { id: 'car-02', category: 'Carguero y alas', name: 'RECONSTRUCCIÓN DE SOPORTE ANGULAR ALA LATERAL',        basePrice:  4433, affectedBySize: false },
+  { id: 'car-02', category: 'Carguero y alas', name: 'RECONSTRUCCIÓN DE SOPORTE ANGULAR ALA LATERAL',        basePrice:  4433, affectedBySize: false, subOptions: DER_IZQ },
   { id: 'car-03', category: 'Carguero y alas', name: 'CONSTRUCCIÓN DE TOPE PARA ALA DE CARGUERO',            basePrice:  3046, affectedBySize: false },
-  { id: 'car-04', category: 'Carguero y alas', name: 'CARTABONES DE REFUERZO PARA ALA DE CARGUERO',          basePrice:  2403, affectedBySize: false },
-  { id: 'car-05', category: 'Carguero y alas', name: 'TAPAS DE ALA DE CARGUERO',                             basePrice:  2359, affectedBySize: false },
-  { id: 'car-06', category: 'Carguero y alas', name: 'SOLDAR CARGUERO 6"',                                   basePrice:  1918, affectedBySize: false },
-  { id: 'car-07', category: 'Carguero y alas', name: 'SOLDAR CARGUERO 12"',                                  basePrice:  3795, affectedBySize: false },
-  { id: 'car-08', category: 'Carguero y alas', name: 'SOLDAR CARGUERO 18"',                                  basePrice:  5690, affectedBySize: false },
+  { id: 'car-04', category: 'Carguero y alas', name: 'CARTABONES DE REFUERZO PARA ALA DE CARGUERO',          basePrice:  2403, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'car-05', category: 'Carguero y alas', name: 'TAPAS DE ALA DE CARGUERO',                             basePrice:  2359, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'car-06', category: 'Carguero y alas', name: 'SOLDAR CARGUERO 6"',                                   basePrice:  1918, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'car-07', category: 'Carguero y alas', name: 'SOLDAR CARGUERO 12"',                                  basePrice:  3795, affectedBySize: false, subOptions: DER_IZQ },
+  { id: 'car-08', category: 'Carguero y alas', name: 'SOLDAR CARGUERO 18"',                                  basePrice:  5690, affectedBySize: false, subOptions: DER_IZQ },
   { id: 'car-09', category: 'Carguero y alas', name: 'PARCHE EN CARGUERO TRASERO',                           basePrice:  1993, affectedBySize: false },
   { id: 'car-10', category: 'Carguero y alas', name: 'COLOCAR PARCHE DE 10X10',                              basePrice:  4000, affectedBySize: false },
 
@@ -126,10 +127,10 @@ export const SERVICES: Service[] = [
   { id: 'sop-10', category: 'Soportes y bases', name: 'ENDEREZAR / SOLDAR BASE PORTA PLAFONES 3"',           basePrice:  1138, affectedBySize: false },
   { id: 'sop-11', category: 'Soportes y bases', name: 'ENDEREZAR / SOLDAR BASE PORTA CANDADO',               basePrice:  3795, affectedBySize: false },
   { id: 'sop-12', category: 'Soportes y bases', name: 'ENDEREZAR / SOLDAR BASE PORTA PLAFONES 24"',          basePrice:  7586, affectedBySize: false },
-  { id: 'sop-13', category: 'Soportes y bases', name: 'ENDEREZAR BASE DE CANDADO (Derecho / Izquierdo)',     basePrice:   980, affectedBySize: false, subOptions: ['Derecho', 'Izquierdo'] },
+  { id: 'sop-13', category: 'Soportes y bases', name: 'ENDEREZAR BASE DE CANDADO (Derecho / Izquierdo)',     basePrice:   980, affectedBySize: false, subOptions: DER_IZQ },
 
   // ── Balancines y muelles ───────────────────────────────────────────────────
-  { id: 'bal-01', category: 'Balancines y muelles', name: 'SOLDAR Y ENDEREZAR DE BALANCÍN',                                     basePrice:  2908, affectedBySize: false },
+  { id: 'bal-01', category: 'Balancines y muelles', name: 'SOLDAR Y ENDEREZAR DE BALANCÍN',                                     basePrice:  2908, affectedBySize: false, subOptions: DER_IZQ },
   { id: 'bal-02', category: 'Balancines y muelles', name: 'REEMPLAZO DE 2 BALANCINES',                                          basePrice: 22619, affectedBySize: false },
   { id: 'bal-03', category: 'Balancines y muelles', name: 'REEMPLAZO DE ABRAZADERAS C/TORNILLERÍA Y TUERCAS DE SEGURIDAD',      basePrice:  5897, affectedBySize: false },
   { id: 'bal-04', category: 'Balancines y muelles', name: 'REEMPLAZO DE 2 MUELLES',                                             basePrice: 32709, affectedBySize: false },
