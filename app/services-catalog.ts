@@ -38,9 +38,9 @@ export const SERVICES: Service[] = [
   // ── Travesaños ─────────────────────────────────────────────────────────────
   { id: 'trv-01', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 18"', basePrice:  5690, affectedBySize: false, subOptions: FTT },
   { id: 'trv-02', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 24"', basePrice:  7586, affectedBySize: false, subOptions: FTT },
-  { id: 'trv-03', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 27"', basePrice:  5690, affectedBySize: false, subOptions: FTT },
+  { id: 'trv-03', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 27"', basePrice:  8375, affectedBySize: false, subOptions: FTT },
   { id: 'trv-04', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 30"', basePrice:  9163, affectedBySize: false, subOptions: FTT },
-  { id: 'trv-05', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 37"', basePrice:  6900, affectedBySize: false, subOptions: FTT },
+  { id: 'trv-05', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 37"', basePrice: 11302, affectedBySize: false, subOptions: FTT },
   { id: 'trv-06', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 42"', basePrice: 12829, affectedBySize: false, subOptions: FTT },
   { id: 'trv-07', category: 'Travesaños', name: 'SOLDAR/REFORZAR TRAVESAÑO FRONTAL/TRASERO/TRANSVERSAL 48"', basePrice: 14832, affectedBySize: false, subOptions: [...FTT, ...DER_IZQ] },
   { id: 'trv-08', category: 'Travesaños', name: 'REFORZAR TRAVESAÑO TRANSVERSAL CON PLACA DE 6X6PLG',         basePrice:  1995, affectedBySize: false },
@@ -50,7 +50,7 @@ export const SERVICES: Service[] = [
 
   // ── Cabezal frontal ────────────────────────────────────────────────────────
   { id: 'cab-01', category: 'Cabezal frontal', name: 'SOLDAR / REFORZAR CABEZAL FRONTAL 12"',                 basePrice:  3795, affectedBySize: false },
-  { id: 'cab-02', category: 'Cabezal frontal', name: 'SOLDAR / REFORZAR CABEZAL FRONTAL 16"',                 basePrice:  2105, affectedBySize: false },
+  { id: 'cab-02', category: 'Cabezal frontal', name: 'SOLDAR / REFORZAR CABEZAL FRONTAL 16"',                 basePrice:  5060, affectedBySize: false },
   { id: 'cab-03', category: 'Cabezal frontal', name: 'REEMPLAZO DE CABEZAL FRONTAL DERECHO',                  basePrice:  5786, affectedBySize: false },
   { id: 'cab-04', category: 'Cabezal frontal', name: 'ENDEREZAR CABEZAL FRONTAL 11"',                         basePrice:  2998, affectedBySize: false },
   { id: 'cab-05', category: 'Cabezal frontal', name: 'ENDEREZAR CEJA FRONTAL 5"',                             basePrice:  1136, affectedBySize: false, subOptions: DER_IZQ },
@@ -77,7 +77,7 @@ export const SERVICES: Service[] = [
   { id: 'est-04', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 18"',                    basePrice:  5690, affectedBySize: false, subOptions: DER_IZQ },
   { id: 'est-05', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 30"',                    basePrice:  9696, affectedBySize: false },
   { id: 'est-06', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 33"',                    basePrice: 10314, affectedBySize: false },
-  { id: 'est-07', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 34"',                    basePrice:  5690, affectedBySize: false },
+  { id: 'est-07', category: 'Estructura interior', name: 'SOLDAR ESTRUCTURA INTERIOR 34"',                    basePrice: 10626, affectedBySize: false },
   { id: 'est-08', category: 'Estructura interior', name: 'SOLDAR SECCIÓN ENTRE TRAVESAÑOS INTERIORES (Lado Derecho / Lado Izquierdo)', basePrice: 13200, affectedBySize: false, subOptions: LADI },
 
   // ── Parte frontal ──────────────────────────────────────────────────────────
