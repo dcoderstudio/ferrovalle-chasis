@@ -141,6 +141,8 @@ export default function ChassisModal({
   const onUpdateRef = useRef(onUpdate);
   onUpdateRef.current = onUpdate;
   const mounted = useRef(false);
+  const logoGeschaftRef = useRef<string>('');
+  const logoFerroRef = useRef<string>('');
 
   const update = (fields: Partial<Chassis>) => {
     setData(prev => ({ ...prev, ...fields }));
@@ -151,6 +153,17 @@ export default function ChassisModal({
     const t = setTimeout(() => onUpdateRef.current(data), 600);
     return () => clearTimeout(t);
   }, [data]);
+
+  useEffect(() => {
+    const toDataUrl = (url: string) =>
+      fetch(url).then(r => r.blob()).then(b => new Promise<string>(res => {
+        const reader = new FileReader();
+        reader.onloadend = () => res(reader.result as string);
+        reader.readAsDataURL(b);
+      })).catch(() => '');
+    Promise.all([toDataUrl('/logo-geschaft.png'), toDataUrl('/logo-ferrovalle.png')])
+      .then(([g, f]) => { logoGeschaftRef.current = g; logoFerroRef.current = f; });
+  }, []);
 
   const handleClose = () => {
     onUpdateRef.current(data);
@@ -338,11 +351,13 @@ export default function ChassisModal({
     <style>
       *{margin:0;padding:0;box-sizing:border-box}
       body{font-family:'Montserrat',sans-serif;color:#1e293b;background:#fff;padding:40px;font-size:13px}
-      .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:18px;border-bottom:3px solid #1e3a5f}
-      .co{font-size:26px;font-weight:800;color:#1e3a5f;letter-spacing:-0.5px}
-      .co-sub{font-size:11px;color:#64748b;margin-top:3px}
-      .dt h2{font-size:15px;font-weight:700;color:#f97316;text-transform:uppercase;letter-spacing:1px;text-align:right}
-      .dt p{font-size:11px;color:#64748b;margin-top:3px;text-align:right}
+      .hdr{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;margin-bottom:28px;padding-bottom:18px;border-bottom:3px solid #1e3a5f}
+      .logo{height:52px;width:auto;object-fit:contain;display:block}
+      .logo-right{margin-left:auto}
+      .logo-fallback{font-size:22px;font-weight:800;color:#1e3a5f}
+      .dt{text-align:center}
+      .dt h2{font-size:15px;font-weight:700;color:#f97316;text-transform:uppercase;letter-spacing:1px}
+      .dt p{font-size:11px;color:#64748b;margin-top:3px}
       .sec{margin-bottom:22px}
       .sec-title{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #e2e8f0}
       .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -364,8 +379,9 @@ export default function ChassisModal({
       @media print{body{padding:20px}@page{margin:12mm}}
     </style></head><body>
     <div class="hdr">
-      <div><div class="co">FERROVALLE</div><div class="co-sub">Mantenimiento y Reparación de Chasis de Grúas</div></div>
-      <div class="dt"><h2>Diagnóstico Técnico</h2><p>Fecha: ${today}</p></div>
+      ${logoGeschaftRef.current ? `<img src="${logoGeschaftRef.current}" class="logo" alt="Geschaft C&V Group">` : '<span class="logo-fallback">GESCHAFT</span>'}
+      <div class="dt"><h2>${isDiagnostico ? 'Diagnóstico Técnico' : 'Cotización'}</h2><p>Fecha: ${today}</p></div>
+      ${logoFerroRef.current ? `<img src="${logoFerroRef.current}" class="logo logo-right" alt="Ferrovalle">` : '<span class="logo-fallback" style="text-align:right;display:block">FERROVALLE</span>'}
     </div>
     <div class="sec">
       <div class="sec-title">Información del Chasis</div>
@@ -513,6 +529,8 @@ export default function ChassisModal({
               serviceUnitPrice={serviceUnitPrice}
               quotedTotal={quotedTotal}
               update={update}
+              logoGeschaft={logoGeschaftRef.current}
+              logoFerro={logoFerroRef.current}
             />
           )}
         </div>
@@ -1172,11 +1190,15 @@ function CotizacionTab({
   serviceUnitPrice,
   quotedTotal,
   update,
+  logoGeschaft,
+  logoFerro,
 }: {
   data: Chassis;
   serviceUnitPrice: (svc: Service) => number;
   quotedTotal: number;
   update: (f: Partial<Chassis>) => void;
+  logoGeschaft: string;
+  logoFerro: string;
 }) {
   const activeItems = data.selectedServices
     .map(sel => {
@@ -1229,23 +1251,59 @@ function CotizacionTab({
       return `<tr><td>${name}</td><td style="text-align:center">${qty}</td><td style="text-align:right;font-weight:600;color:#1e3a5f">${formatCurrency(unitPrice)}</td><td style="text-align:right;font-weight:700;color:#1e3a5f">${formatCurrency(subtotal)}</td></tr>`;
     }).join('');
 
+    const chassisSVGApproved = `<svg viewBox="0 0 800 210" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="800" height="210" fill="#f8fafc" rx="8"/>
+      <rect x="30" y="68" width="740" height="18" rx="3" fill="#1e3a5f"/>
+      <rect x="30" y="124" width="740" height="18" rx="3" fill="#1e3a5f"/>
+      <rect x="30" y="62" width="20" height="96" rx="3" fill="#0f2746"/>
+      <rect x="750" y="62" width="20" height="96" rx="3" fill="#0f2746"/>
+      <rect x="50" y="86" width="700" height="48" fill="#e8f0fa" opacity="0.5"/>
+      <rect x="143" y="68" width="9" height="74" fill="#2a5080"/>
+      <rect x="258" y="68" width="9" height="74" fill="#2a5080"/>
+      <rect x="373" y="68" width="9" height="74" fill="#2a5080"/>
+      <rect x="488" y="68" width="9" height="74" fill="#2a5080"/>
+      <rect x="603" y="68" width="9" height="74" fill="#2a5080"/>
+      <rect x="718" y="68" width="9" height="74" fill="#2a5080"/>
+      <polygon points="50,62 82,62 50,94" fill="#2a5080" opacity="0.55"/>
+      <polygon points="750,62 718,62 750,94" fill="#2a5080" opacity="0.55"/>
+      <polygon points="50,158 82,158 50,126" fill="#2a5080" opacity="0.55"/>
+      <polygon points="750,158 718,158 750,126" fill="#2a5080" opacity="0.55"/>
+      <circle cx="65" cy="76" r="5" fill="#dde6f5"/>
+      <circle cx="65" cy="144" r="5" fill="#dde6f5"/>
+      <circle cx="735" cy="76" r="5" fill="#dde6f5"/>
+      <circle cx="735" cy="144" r="5" fill="#dde6f5"/>
+      <rect x="278" y="84" width="244" height="52" rx="6" fill="#0f2746"/>
+      <rect x="282" y="88" width="236" height="44" rx="4" fill="#1e3a5f"/>
+      <text x="400" y="108" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="3">FERROVALLE</text>
+      <text x="400" y="126" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="18" fill="#10b981" font-weight="800">#${data.chassisNumber || '—'}</text>
+      <line x1="30" y1="42" x2="770" y2="42" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="30" y1="37" x2="30" y2="47" stroke="#94a3b8" stroke-width="1.5"/>
+      <line x1="770" y1="37" x2="770" y2="47" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="400" y="38" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" fill="#94a3b8">Longitud total del chasis</text>
+      <text x="400" y="200" text-anchor="middle" font-family="Montserrat,Arial,sans-serif" font-size="10" fill="#64748b">${SIZE_LABELS[data.size] ?? data.size} · ${CONDITION_LABELS[data.condition] ?? data.condition}</text>
+    </svg>`;
+
     const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
     <title>Cotización Aprobada — Chasis #${data.chassisNumber}</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
       *{margin:0;padding:0;box-sizing:border-box}
       body{font-family:'Montserrat',sans-serif;color:#1e293b;background:#fff;padding:40px;font-size:13px}
-      .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:18px;border-bottom:3px solid #1e3a5f}
-      .co{font-size:26px;font-weight:800;color:#1e3a5f;letter-spacing:-0.5px}
-      .co-sub{font-size:11px;color:#64748b;margin-top:3px}
-      .dt h2{font-size:15px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:1px;text-align:right}
-      .dt p{font-size:11px;color:#64748b;margin-top:3px;text-align:right}
-      .badge{display:inline-block;background:#059669;color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:1.5px;margin-top:6px}
+      .hdr{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;margin-bottom:28px;padding-bottom:18px;border-bottom:3px solid #059669}
+      .logo{height:52px;width:auto;object-fit:contain;display:block}
+      .logo-right{margin-left:auto}
+      .logo-fallback{font-size:22px;font-weight:800;color:#1e3a5f}
+      .dt{text-align:center}
+      .dt h2{font-size:15px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:1px}
+      .dt p{font-size:11px;color:#64748b;margin-top:3px}
+      .badge{display:inline-block;background:#059669;color:#fff;font-size:9px;font-weight:700;padding:3px 10px;border-radius:4px;letter-spacing:1.5px;margin-top:6px}
       .sec{margin-bottom:22px}
       .sec-title{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #e2e8f0}
       .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
       .fi label{font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px}
       .fi span{font-size:14px;font-weight:600;color:#1e293b}
+      .drawing{background:#f8fafc;border-radius:10px;padding:16px;border:1px solid #e2e8f0;margin:4px 0}
+      .drawing svg{width:100%;height:auto}
       table{width:100%;border-collapse:collapse}
       thead th{background:#1e3a5f;color:#fff;padding:9px 12px;font-size:10px;font-weight:700;text-align:left;text-transform:uppercase;letter-spacing:1px}
       tbody td{padding:9px 12px;border-bottom:1px solid #f1f5f9;font-size:12px}
@@ -1253,18 +1311,20 @@ function CotizacionTab({
       .total-bar{display:flex;justify-content:flex-end;align-items:center;gap:20px;padding:12px 14px;background:#059669;border-radius:0 0 6px 6px}
       .tl{font-size:12px;font-weight:600;color:#d1fae5}
       .ta{font-size:22px;font-weight:800;color:#fff}
+      .notes{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;font-size:13px;color:#475569;line-height:1.6}
       .footer{margin-top:36px;padding-top:18px;border-top:1px solid #e2e8f0;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
       .sign label{font-size:9px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:22px}
       .sign-line{border-top:1px solid #94a3b8}
       @media print{body{padding:20px}@page{margin:12mm}}
     </style></head><body>
     <div class="hdr">
-      <div>
-        <div class="co">FERROVALLE</div>
-        <div class="co-sub">Mantenimiento y Reparación de Chasis de Grúas</div>
-        <div class="badge">✓ COTIZACIÓN APROBADA</div>
+      ${logoGeschaft ? `<img src="${logoGeschaft}" class="logo" alt="Geschaft C&V Group">` : '<span class="logo-fallback">GESCHAFT</span>'}
+      <div class="dt">
+        <h2>Cotización Aprobada</h2>
+        <p>Fecha: ${today}</p>
+        <div class="badge">✓ APROBADA</div>
       </div>
-      <div class="dt"><h2>Cotización Aprobada</h2><p>Fecha: ${today}</p></div>
+      ${logoFerro ? `<img src="${logoFerro}" class="logo logo-right" alt="Ferrovalle">` : '<span class="logo-fallback" style="text-align:right;display:block">FERROVALLE</span>'}
     </div>
     <div class="sec">
       <div class="sec-title">Información del Chasis</div>
@@ -1277,6 +1337,10 @@ function CotizacionTab({
       </div>
     </div>
     <div class="sec">
+      <div class="sec-title">Identificación del Chasis</div>
+      <div class="drawing">${chassisSVGApproved}</div>
+    </div>
+    <div class="sec">
       <div class="sec-title">Servicios Aprobados</div>
       <table>
         <thead><tr><th>Servicio</th><th style="text-align:center">Cant.</th><th style="text-align:right">Precio unit.</th><th style="text-align:right">Subtotal</th></tr></thead>
@@ -1284,7 +1348,7 @@ function CotizacionTab({
       </table>
       <div class="total-bar"><span class="tl">Total aprobado</span><span class="ta">${formatCurrency(approvedTotal)}</span></div>
     </div>
-    ${data.notes ? `<div class="sec"><div class="sec-title">Observaciones</div><div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;font-size:13px;color:#475569;line-height:1.6">${escHtml(data.notes)}</div></div>` : ''}
+    ${data.notes ? `<div class="sec"><div class="sec-title">Observaciones</div><div class="notes">${escHtml(data.notes)}</div></div>` : ''}
     <div class="footer">
       <div class="sign"><label>Aprobado por</label><div class="sign-line"></div></div>
       <div class="sign"><label>Fecha</label><div class="sign-line"></div></div>
