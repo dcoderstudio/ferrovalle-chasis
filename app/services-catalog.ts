@@ -117,7 +117,7 @@ export const SERVICES: Service[] = [
   // ── Soportes y bases ───────────────────────────────────────────────────────
   { id: 'sop-01', category: 'Soportes y bases', name: 'REEMPLAZAR PLACA DE 4X7PLG EN BASE PORTA CANDADO',    basePrice:  1995, affectedBySize: false },
   { id: 'sop-02', category: 'Soportes y bases', name: 'ENDEREZAR Y SOLDAR DE BASE PORTA MANITAS',            basePrice:  4268, affectedBySize: false },
-  { id: 'sop-03', category: 'Soportes y bases', name: 'SOLDAR / REFORZAR SOPORTE LATERAL 12"',               basePrice:  3793, affectedBySize: false },
+  { id: 'sop-03', category: 'Soportes y bases', name: 'SOLDAR / REFORZAR SOPORTE LATERAL 12"',               basePrice:  3795, affectedBySize: false },
   { id: 'sop-04', category: 'Soportes y bases', name: 'SOLDAR / REFORZAR BASE PORTACANDADO 18"',             basePrice:  5690, affectedBySize: false },
   { id: 'sop-05', category: 'Soportes y bases', name: 'ENDEREZAR / SOLDAR BASE PORTA PLAFONES 12"',          basePrice:  3795, affectedBySize: false },
   { id: 'sop-06', category: 'Soportes y bases', name: 'ENDEREZAR SOPORTE 5"',                                basePrice:  1204, affectedBySize: false },

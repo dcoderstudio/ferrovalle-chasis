@@ -105,7 +105,7 @@ const STATUS_OPTIONS: Array<{
 ];
 
 const inp =
-  'w-full bg-[#1a2235] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all [color-scheme:dark]';
+  'w-full bg-[#1a2235] border border-white/[0.08] rounded-xl px-3 py-2.5 text-base text-white placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all [color-scheme:dark]';
 
 function formatCurrency(n: number): string {
   return new Intl.NumberFormat('es-MX', {
@@ -818,10 +818,9 @@ function FotosTab({
                     alt={`${sec.label} ${i + 1}`}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors" />
                   <button
                     onClick={() => onRemovePhoto(sec.key, i)}
-                    className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-500 text-white rounded-full text-xs hidden group-hover:flex items-center justify-center"
+                    className="absolute top-1.5 right-1.5 w-7 h-7 bg-red-500 text-white rounded-full text-sm flex items-center justify-center shadow-lg"
                   >
                     ×
                   </button>
@@ -1132,7 +1131,7 @@ function DiagnosticoTab({
       )}
 
       {/* Sticky bottom bar */}
-      <div className="sticky bottom-0 flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
+      <div className="sticky bottom-0 flex items-center justify-between gap-3 rounded-xl border px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]"
         style={{
           background: 'rgba(15,20,32,0.97)',
           backdropFilter: 'blur(8px)',
@@ -1464,7 +1463,7 @@ function CotizacionTab({
 
       {/* Sticky bottom bar — total + PDF button */}
       <div
-        className="sticky bottom-0 flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
+        className="sticky bottom-0 flex items-center justify-between gap-3 rounded-xl border px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]"
         style={{
           background: 'rgba(15,20,32,0.97)',
           backdropFilter: 'blur(8px)',
