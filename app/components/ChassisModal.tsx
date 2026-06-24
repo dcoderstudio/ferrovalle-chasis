@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 
+const escHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 function compressImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -240,8 +243,9 @@ export default function ChassisModal({
     return svc.basePrice;
   };
 
+  // selectedSubOptions===undefined means old saved data before sub-options existed → fall back to quantity
   const selQty = (sel: { quantity: number; selectedSubOptions?: string[] }, svc: Service) =>
-    svc.subOptions ? (sel.selectedSubOptions?.length ?? 0) : sel.quantity;
+    svc.subOptions && sel.selectedSubOptions !== undefined ? sel.selectedSubOptions.length : sel.quantity;
 
   const quotedTotal = data.selectedServices.reduce((sum, sel) => {
     const svc = SERVICES.find(s => s.id === sel.serviceId);
@@ -366,12 +370,12 @@ export default function ChassisModal({
     <div class="sec">
       <div class="sec-title">Información del Chasis</div>
       <div class="grid">
-        <div class="fi"><label>Número de Chasis</label><span>#${data.chassisNumber || '—'}</span></div>
+        <div class="fi"><label>Número de Chasis</label><span>#${escHtml(data.chassisNumber || '—')}</span></div>
         <div class="fi"><label>Tamaño</label><span>${SIZE_LABELS[data.size] ?? data.size}</span></div>
         <div class="fi"><label>Condición</label><span>${CONDITION_LABELS[data.condition] ?? data.condition}</span></div>
-        ${techName ? `<div class="fi"><label>Realizado por</label><span>${techName}</span></div>` : ''}
-        ${!isDiagnostico && data.clientName ? `<div class="fi"><label>Cliente</label><span>${data.clientName}</span></div>` : ''}
-        ${!isDiagnostico && data.purchaseOrder ? `<div class="fi"><label>OC</label><span>${data.purchaseOrder}</span></div>` : ''}
+        ${techName ? `<div class="fi"><label>Realizado por</label><span>${escHtml(techName)}</span></div>` : ''}
+        ${!isDiagnostico && data.clientName ? `<div class="fi"><label>Cliente</label><span>${escHtml(data.clientName)}</span></div>` : ''}
+        ${!isDiagnostico && data.purchaseOrder ? `<div class="fi"><label>OC</label><span>${escHtml(data.purchaseOrder)}</span></div>` : ''}
         ${!isDiagnostico && data.commitmentDate ? `<div class="fi"><label>Entrega compromiso</label><span>${new Date(data.commitmentDate+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}</span></div>` : ''}
       </div>
     </div>
@@ -386,7 +390,7 @@ export default function ChassisModal({
         : `<table><thead><tr><th>Servicio</th><th style="text-align:center">Cantidad</th><th style="text-align:right">Total estimado</th></tr></thead><tbody>${servicesRowsFull}</tbody></table>${selectedList.length > 0 ? `<div class="total-bar"><span class="tl">Total estimado</span><span class="ta">${formatCurrency(quotedTotal)}</span></div>` : ''}`
       }
     </div>
-    ${data.notes ? `<div class="sec"><div class="sec-title">Observaciones</div><div class="notes">${data.notes}</div></div>` : ''}
+    ${data.notes ? `<div class="sec"><div class="sec-title">Observaciones</div><div class="notes">${escHtml(data.notes)}</div></div>` : ''}
     <div class="footer">
       <div class="sign"><label>Técnico responsable</label><div class="sign-line"></div></div>
       <div class="sign"><label>Fecha</label><div class="sign-line"></div></div>
@@ -1178,9 +1182,10 @@ function CotizacionTab({
     .map(sel => {
       const svc = SERVICES.find(s => s.id === sel.serviceId);
       if (!svc) return null;
-      const qty = svc.subOptions ? (sel.selectedSubOptions?.length ?? 0) : sel.quantity;
+      const qty = svc.subOptions && sel.selectedSubOptions !== undefined ? sel.selectedSubOptions.length : sel.quantity;
       if (qty === 0) return null;
-      return { sel, svc, qty, unitPrice: serviceUnitPrice(svc), subtotal: serviceUnitPrice(svc) * qty };
+      const unitPrice = serviceUnitPrice(svc);
+      return { sel, svc, qty, unitPrice, subtotal: unitPrice * qty };
     })
     .filter(Boolean) as Array<{
       sel: (typeof data.selectedServices)[0];
@@ -1192,8 +1197,8 @@ function CotizacionTab({
 
   const approved = data.approvedServices ?? [];
   const allApproved = activeItems.length > 0 && activeItems.every(i => approved.includes(i.svc.id));
-  const someApproved = approved.length > 0;
   const approvedItems = activeItems.filter(i => approved.includes(i.svc.id));
+  const someApproved = approvedItems.length > 0;
   const approvedTotal = approvedItems.reduce((sum, i) => sum + i.subtotal, 0);
 
   const toggleApproveAll = () => {
@@ -1264,9 +1269,9 @@ function CotizacionTab({
     <div class="sec">
       <div class="sec-title">Información del Chasis</div>
       <div class="grid">
-        <div class="fi"><label>Número de Chasis</label><span>#${data.chassisNumber || '—'}</span></div>
-        ${data.clientName ? `<div class="fi"><label>Cliente</label><span>${data.clientName}</span></div>` : ''}
-        ${data.purchaseOrder ? `<div class="fi"><label>Orden de Compra</label><span>${data.purchaseOrder}</span></div>` : ''}
+        <div class="fi"><label>Número de Chasis</label><span>#${escHtml(data.chassisNumber || '—')}</span></div>
+        ${data.clientName ? `<div class="fi"><label>Cliente</label><span>${escHtml(data.clientName)}</span></div>` : ''}
+        ${data.purchaseOrder ? `<div class="fi"><label>Orden de Compra</label><span>${escHtml(data.purchaseOrder)}</span></div>` : ''}
         <div class="fi"><label>Tamaño</label><span>${SIZE_LABELS[data.size] ?? data.size}</span></div>
         ${data.commitmentDate ? `<div class="fi"><label>Entrega compromiso</label><span>${new Date(data.commitmentDate+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}</span></div>` : ''}
       </div>
@@ -1279,7 +1284,7 @@ function CotizacionTab({
       </table>
       <div class="total-bar"><span class="tl">Total aprobado</span><span class="ta">${formatCurrency(approvedTotal)}</span></div>
     </div>
-    ${data.notes ? `<div class="sec"><div class="sec-title">Observaciones</div><div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;font-size:13px;color:#475569;line-height:1.6">${data.notes}</div></div>` : ''}
+    ${data.notes ? `<div class="sec"><div class="sec-title">Observaciones</div><div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;font-size:13px;color:#475569;line-height:1.6">${escHtml(data.notes)}</div></div>` : ''}
     <div class="footer">
       <div class="sign"><label>Aprobado por</label><div class="sign-line"></div></div>
       <div class="sign"><label>Fecha</label><div class="sign-line"></div></div>
