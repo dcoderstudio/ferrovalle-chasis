@@ -141,8 +141,6 @@ export default function ChassisModal({
   const onUpdateRef = useRef(onUpdate);
   onUpdateRef.current = onUpdate;
   const mounted = useRef(false);
-  const logoGeschaftRef = useRef<string>('');
-  const logoFerroRef = useRef<string>('');
 
   const update = (fields: Partial<Chassis>) => {
     setData(prev => ({ ...prev, ...fields }));
@@ -153,17 +151,6 @@ export default function ChassisModal({
     const t = setTimeout(() => onUpdateRef.current(data), 600);
     return () => clearTimeout(t);
   }, [data]);
-
-  useEffect(() => {
-    const toDataUrl = (url: string) =>
-      fetch(url).then(r => r.blob()).then(b => new Promise<string>(res => {
-        const reader = new FileReader();
-        reader.onloadend = () => res(reader.result as string);
-        reader.readAsDataURL(b);
-      })).catch(() => '');
-    Promise.all([toDataUrl('/logo-geschaft.png'), toDataUrl('/logo-ferrovalle.png')])
-      .then(([g, f]) => { logoGeschaftRef.current = g; logoFerroRef.current = f; });
-  }, []);
 
   const handleClose = () => {
     onUpdateRef.current(data);
@@ -304,6 +291,9 @@ export default function ChassisModal({
     }).filter(Boolean);
 
     const techName = isDiagnostico ? userName : (data.diagnosedBy ?? '');
+    const origin = window.location.origin;
+    const logoG = `${origin}/logo-geschaft.png`;
+    const logoF = `${origin}/logo-ferrovalle.png`;
 
     const chassisSVG = `<svg viewBox="0 0 800 210" xmlns="http://www.w3.org/2000/svg">
       <rect x="0" y="0" width="800" height="210" fill="#f8fafc" rx="8"/>
@@ -379,9 +369,9 @@ export default function ChassisModal({
       @media print{body{padding:20px}@page{margin:12mm}}
     </style></head><body>
     <div class="hdr">
-      ${logoGeschaftRef.current ? `<img src="${logoGeschaftRef.current}" class="logo" alt="Geschaft C&V Group">` : '<span class="logo-fallback">GESCHAFT</span>'}
+      <img src="${logoG}" class="logo" alt="Geschaft C&V Group">
       <div class="dt"><h2>${isDiagnostico ? 'Diagnóstico Técnico' : 'Cotización'}</h2><p>Fecha: ${today}</p></div>
-      ${logoFerroRef.current ? `<img src="${logoFerroRef.current}" class="logo logo-right" alt="Ferrovalle">` : '<span class="logo-fallback" style="text-align:right;display:block">FERROVALLE</span>'}
+      <img src="${logoF}" class="logo logo-right" alt="Ferrovalle">
     </div>
     <div class="sec">
       <div class="sec-title">Información del Chasis</div>
@@ -529,8 +519,8 @@ export default function ChassisModal({
               serviceUnitPrice={serviceUnitPrice}
               quotedTotal={quotedTotal}
               update={update}
-              logoGeschaft={logoGeschaftRef.current}
-              logoFerro={logoFerroRef.current}
+              logoGeschaft={typeof window !== 'undefined' ? `${window.location.origin}/logo-geschaft.png` : ''}
+              logoFerro={typeof window !== 'undefined' ? `${window.location.origin}/logo-ferrovalle.png` : ''}
             />
           )}
         </div>
